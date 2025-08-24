@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}Вход или создание аккаунта - Линка{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <!-- Левая колонка с информацией -->
+    <div class="auth-info">
+        <div class="auth-info-content">
+            <h1>Добро пожаловать в Линка!</h1>
+            <p>Ваша социальная сеть для общения, обмена мыслями и новостями. Присоединяйтесь к сообществу прямо сейчас!</p>
+            
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div>
+                        <h3>Общение</h3>
+                        <p>Общайтесь с друзьями и знакомыми</p>
+                    </div>
+                </div>
+                
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fas fa-share-alt"></i>
+                    </div>
+                    <div>
+                        <h3>Делитесь</h3>
+                        <p>Делитесь своими мыслями и новостями</p>
+                    </div>
+                </div>
+                
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <div>
+                        <h3>Лайки и комментарии</h3>
+                        <p>Поддерживайте и обсуждайте посты</p>
+                    </div>
+                </div>
+                
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <div>
+                        <h3>Подписки</h3>
+                        <p>Подписывайтесь на интересных людей</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Правая колонка с формой -->
+    <div class="auth-form">
+        <div class="form-card">
+            <h2>Вход или создание аккаунта</h2>
+            <p style="text-align: center; color: rgba(255,255,255,0.7); margin-bottom: 2rem;">
+                Если аккаунт не существует, он будет создан автоматически
+            </p>
+            
+            <form method="POST">
+                <div class="form-group">
+                    <label for="username">Имя пользователя</label>
+                    <input type="text" id="username" name="username" class="form-control" required 
+                           placeholder="Введите имя пользователя">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" name="password" class="form-control" required 
+                           placeholder="Введите пароль">
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-sign-in-alt"></i> Войти / Создать аккаунт
+                </button>
+            </form>
+            
+            <div class="auth-links">
+                <p>Впервые здесь? Просто введите имя пользователя и пароль - аккаунт создастся автоматически!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .auth-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        min-height: calc(100vh - 200px);
+        align-items: center;
+    }
+    
+    .auth-info {
+        padding: 2rem;
+    }
+    
+    .auth-info-content h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: #ffffff;
+        background: linear-gradient(45deg, #3498db, #2ecc71);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .auth-info-content p {
+        font-size: 1.2rem;
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 3rem;
+        line-height: 1.6;
+    }
+    
+    .features {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+    
+    .feature {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .feature-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(45deg, #f39c12, #e67e22);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+        color: white;
+    }
+    
+    .feature h3 {
+        color: #ffffff;
+        margin-bottom: 0.5rem;
+        font-size: 1.2rem;
+    }
+    
+    .feature p {
+        color: rgba(255, 255, 255, 0.7);
+        margin: 0;
+        font-size: 1rem;
+    }
+    
+    .auth-form {
+        display: flex;
+        justify-content: center;
+    }
+    
+    .form-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 2.5rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        width: 100%;
+        max-width: 400px;
+    }
+    
+    .form-card h2 {
+        text-align: center;
+        margin-bottom: 1rem;
+        color: #ffffff;
+        font-size: 1.8rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #ffffff;
+    }
+    
+    .auth-links {
+        text-align: center;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .auth-links p {
+        color: rgba(255, 255, 255, 0.7);
+        margin: 0;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+    
+    /* Адаптивность */
+    @media (max-width: 768px) {
+        .auth-container {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            padding: 1rem;
+        }
+        
+        .auth-info {
+            order: 2;
+            text-align: center;
+        }
+        
+        .auth-form {
+            order: 1;
+        }
+        
+        .features {
+            align-items: center;
+        }
+        
+        .feature {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .auth-info-content h1 {
+            font-size: 2rem;
+        }
+    }
+</style>
+{% endblock %}

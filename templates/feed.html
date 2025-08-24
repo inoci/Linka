@@ -1,0 +1,1457 @@
+{% extends "base.html" %}
+
+{% block title %}Лента - Линка{% endblock %}
+
+{% block content %}
+<div class="feed-layout">
+    <!-- Левая колонка с постами -->
+    <div class="posts-column">
+        <!-- Создание поста -->
+        <div class="create-post-section">
+            <div class="create-post-card">
+                <div class="create-post-header">
+                    <div class="user-avatar-large">
+                        {{ session.username[0].upper() }}
+                    </div>
+                    <div class="create-post-info">
+                        <h3>Что у вас нового, {{ session.username }}?</h3>
+                        <p>Поделитесь своими мыслями с друзьями</p>
+                    </div>
+                </div>
+                
+                <form method="POST" action="{{ url_for('create_post') }}" class="create-post-form" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <textarea name="content" class="post-textarea" placeholder="Напишите что-нибудь интересное..." rows="4" required></textarea>
+                        
+                        <!-- Скрытые поля для медиа -->
+                        <input type="hidden" name="emoji" id="emoji-field" value="">
+                        <input type="hidden" name="location" id="location-field" value="">
+                        <input type="hidden" name="location_name" id="location-name-field" value="">
+                        
+                        <!-- Поле для изображения -->
+                        <input type="file" name="image" id="image-input" accept="image/*" style="display: none;">
+                        
+                        <!-- Предварительный просмотр изображения -->
+                        <div id="image-preview" class="image-preview" style="display: none;">
+                            <img id="preview-img" src="" alt="Предварительный просмотр">
+                            <button type="button" class="remove-image-btn" onclick="removeImage()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Отображение эмодзи -->
+                        <div id="emoji-preview" class="emoji-preview" style="display: none;">
+                            <span id="selected-emoji"></span>
+                            <button type="button" class="remove-emoji-btn" onclick="removeEmoji()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Отображение геолокации -->
+                        <div id="location-preview" class="location-preview" style="display: none;">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span id="selected-location"></span>
+                            <button type="button" class="remove-location-btn" onclick="removeLocation()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <div class="post-options">
+                            <button type="button" class="option-btn" title="Добавить фото" onclick="addImage()">
+                                <i class="fas fa-image"></i>
+                            </button>
+                            <button type="button" class="option-btn" title="Добавить эмодзи" onclick="addEmoji()">
+                                <i class="fas fa-smile"></i>
+                            </button>
+                            <button type="button" class="option-btn" title="Добавить местоположение" onclick="addLocation()">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </button>
+                        </div>
+                        <button type="submit" class="publish-btn">
+                            <i class="fas fa-paper-plane"></i>
+                            <span>Опубликовать</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Посты -->
+        {% if posts %}
+            <div class="posts-container">
+                {% for post in posts %}
+                    {% if post.user %}
+                    <article class="post-card" data-post-id="{{ post.id }}">
+                        {% if post.original_post %}
+                        <div class="repost-indicator">
+                            <i class="fas fa-share-alt"></i>
+                            <em>Этот пост переслали. </em>
+                            <a href="{{ url_for('profile', username=post.original_post.user.username) }}" class="original-author-link">
+                                {{ post.original_post.user.first_name }} {{ post.original_post.user.last_name }}
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="post-header">
+                            <div class="post-user-info">
+                                <div class="post-avatar">
+                                    {{ post.user.username[0].upper() }}
+                                </div>
+                                <div class="user-details">
+                                    <h4 class="user-name">
+                                        <a href="{{ url_for('profile', username=post.user.username) }}">
+                                            {{ post.user.first_name }} {{ post.user.last_name }}
+                                        </a>
+                                    </h4>
+                                    <div class="post-meta">
+                                        <span class="username">@{{ post.user.username }}</span>
+                                        <span class="post-time">
+                                            <i class="fas fa-clock"></i>
+                                            {{ post.created_at.strftime('%d.%m.%Y в %H:%M') }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="post-menu">
+                                <button class="menu-btn" title="Действия">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="post-content">
+                            <p>{{ post.content }}</p>
+                            
+                            <!-- Отображение изображения -->
+                            {% if post.image %}
+                            <div class="post-image">
+                                <img src="{{ url_for('static', filename=post.image) }}" alt="Изображение в посте" class="post-image-content">
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Отображение эмодзи -->
+                            {% if post.emoji %}
+                            <div class="post-emoji">
+                                <span class="emoji-display">{{ post.emoji }}</span>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Отображение геолокации -->
+                            {% if post.location %}
+                            <div class="post-location">
+                                <div class="location-info">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>{{ post.location_name or post.location }}</span>
+                                </div>
+                                <div class="location-map" id="map-{{ post.id }}" data-lat="{{ post.location.split(',')[0] }}" data-lng="{{ post.location.split(',')[1] }}"></div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="post-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-heart"></i>
+                                <span>{{ post.likes }}</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-comment"></i>
+                                <span>{{ post.comments_list|length }}</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-share"></i>
+                                <span>0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="post-actions">
+                            <button class="action-btn like-btn {% if post.id in user_liked_posts %}liked{% endif %}" 
+                                    data-post-id="{{ post.id }}" onclick="toggleLike({{ post.id }})">
+                                <i class="{% if post.id in user_liked_posts %}fas fa-heart{% else %}far fa-heart{% endif %}"></i>
+                                <span>Лайк</span>
+                            </button>
+                            
+                            <button class="action-btn comment-btn" onclick="toggleComments({{ post.id }})">
+                                <i class="fas fa-comment"></i>
+                                <span>Комментарий</span>
+                            </button>
+                            
+                            <button class="action-btn share-btn" onclick="sharePost({{ post.id }})">
+                                <i class="fas fa-share-alt"></i>
+                                <span>Поделиться</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Секция комментариев -->
+                        <div class="comments-section" id="comments-{{ post.id }}" style="display: none;">
+                            <div class="comments-header">
+                                <h4>Комментарии ({{ post.comments_list|length }})</h4>
+                            </div>
+                            
+                            <!-- Форма комментария -->
+                            <form method="POST" action="{{ url_for('create_comment', post_id=post.id) }}" class="comment-form">
+                                <div class="comment-input-wrapper">
+                                    <input type="text" name="content" class="comment-input" placeholder="Написать комментарий..." required>
+                                    <button type="submit" class="comment-submit">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </form>
+                            
+                            <!-- Список комментариев -->
+                            <div class="comments-list">
+                                {% for comment in post.comments_list %}
+                                <div class="comment-item">
+                                    <div class="comment-avatar">
+                                        {{ comment.user.username[0].upper() }}
+                                    </div>
+                                    <div class="comment-content">
+                                        <div class="comment-header">
+                                            <span class="comment-author">{{ comment.user.username }}</span>
+                                            <span class="comment-time">{{ comment.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                                        </div>
+                                        <p class="comment-text">{{ comment.content }}</p>
+                                        
+                                        {% if comment.user_id == session.user_id %}
+                                        <div class="comment-actions">
+                                            <button class="comment-action-btn" onclick="deleteComment({{ comment.id }})">
+                                                <i class="fas fa-trash"></i>
+                                                <span>Удалить</span>
+                                            </button>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </article>
+                    
+                    <!-- Реклама между постами (каждый 3-й пост) -->
+                    {% if loop.index % 3 == 0 %}
+                    <div class="inline-ad">
+                        <div class="ad-header">
+                            <i class="fas fa-ad"></i>
+                            <span>Реклама</span>
+                        </div>
+                        <div class="ad-content">
+                            <!-- Google AdSense - Горизонтальный баннер -->
+                            <ins class="adsbygoogle"
+                                 style="display:block"
+                                 data-ad-client="ca-pub-1842490779540555"
+                                 data-ad-slot=""
+                                 data-ad-format="horizontal"
+                                 data-ad-width="728"
+                                 data-ad-height="90"></ins>
+                            <script>
+                                 (adsbygoogle = window.adsbygoogle || []).push({});
+                            </script>
+                            
+                            <!-- Fallback текст если реклама не загрузилась -->
+                            <div class="ad-fallback" style="display: none;">
+                                <h4>Новые возможности</h4>
+                                <p>Откройте для себя расширенные функции Линки: группы, события, приватные чаты!</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-newspaper"></i>
+                </div>
+                <h3>Пока нет постов</h3>
+                <p>Будьте первым, кто поделится чем-то интересным!</p>
+                <div class="empty-actions">
+                    <button class="btn btn-primary" onclick="document.querySelector('.post-textarea').focus()">
+                        <i class="fas fa-plus"></i>
+                        Создать первый пост
+                    </button>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Правая колонка с рекламой -->
+    <div class="ads-column">
+        <div class="sticky-ads">
+            <!-- Реклама 1 - Премиум функции -->
+            <div class="ad-card">
+                <div class="ad-header">
+                    <i class="fas fa-star"></i>
+                    <span>Реклама</span>
+                </div>
+                <div class="ad-content">
+                    <!-- Google AdSense - Адаптивный баннер -->
+                    <ins class="adsbygoogle"
+                         style="display:block"
+                         data-ad-client="ca-pub-1842490779540555"
+                         data-ad-slot=""
+                         data-ad-format="auto"
+                         data-full-width-responsive="true"></ins>
+                    <script>
+                         (adsbygoogle = window.adsbygoogle || []).push({});
+                    </script>
+                    
+                    <!-- Fallback текст если реклама не загрузилась -->
+                    <div class="ad-fallback" style="display: none;">
+                        <h4>Кроссплатформенность</h4>
+                        <p>Линка работает на всех устройствах: телефоны, планшеты, компьютеры. Синхронизация в реальном времени!</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Реклама 2 - Сообщество -->
+            <div class="ad-card">
+                <div class="ad-header">
+                    <i class="fas fa-users"></i>
+                    <span>Реклама</span>
+                </div>
+                <div class="ad-content">
+                                                <!-- Google AdSense - Вертикальный баннер -->
+                            <ins class="adsbygoogle"
+                                 style="display:block"
+                                 data-ad-client="ca-pub-1842490779540555"
+                                 data-ad-slot=""
+                                 data-ad-format="vertical"
+                                 data-ad-width="300"
+                                 data-ad-height="600"></ins>
+                    <script>
+                         (adsbygoogle = window.adsbygoogle || []).push({});
+                    </script>
+                    
+                    <!-- Fallback текст если реклама не загрузилась -->
+                    <div class="ad-fallback" style="display: none;">
+                        <h4>Без рекламы</h4>
+                        <p>Пока реклама не загрузилась, наслаждайтесь чистым интерфейсом Линки!</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Реклама 3 - Уведомления -->
+            <div class="ad-card">
+                <div class="ad-header">
+                    <i class="fas fa-bell"></i>
+                    <span>Реклама</span>
+                </div>
+                <div class="ad-content">
+                                                <!-- Google AdSense - Квадратный баннер -->
+                            <ins class="adsbygoogle"
+                                 style="display:block"
+                                 data-ad-client="ca-pub-1842490779540555"
+                                 data-ad-slot=""
+                                 data-ad-format="square"
+                                 data-ad-width="250"
+                                 data-ad-height="250"></ins>
+                    <script>
+                         (adsbygoogle = window.adsbygoogle || []).push({});
+                    </script>
+                    
+                    <!-- Fallback текст если реклама не загрузилась -->
+                    <div class="ad-fallback" style="display: none;">
+                        <h4>Уведомления</h4>
+                        <p>Получайте уведомления о новых постах, лайках и комментариях в реальном времени!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Переключение комментариев
+    function toggleComments(postId) {
+        const commentsSection = document.getElementById(`comments-${postId}`);
+        const isVisible = commentsSection.style.display !== 'none';
+        
+        if (isVisible) {
+            commentsSection.style.display = 'none';
+        } else {
+            commentsSection.style.display = 'block';
+        }
+    }
+    
+    // Лайк поста
+    function toggleLike(postId) {
+        window.location.href = `/like/${postId}`;
+    }
+    
+    // Шаринг поста
+    function sharePost(postId) {
+        window.location.href = `/share/${postId}`;
+    }
+    
+    // Удаление комментария
+    function deleteComment(commentId) {
+        if (confirm('Удалить комментарий?')) {
+            window.location.href = `/delete_comment/${commentId}`;
+        }
+    }
+    
+    // Обновление статистики постов через AJAX
+    function updatePostStats() {
+        const posts = document.querySelectorAll('.post-card');
+        
+        posts.forEach(post => {
+            const postId = post.dataset.postId;
+            const likeCount = post.querySelector('.like-btn');
+            const commentCount = post.querySelector('.comment-btn');
+            
+            fetch(`/api/post/${postId}/stats`)
+                .then(response => response.json())
+                .then(data => {
+                    // Обновляем счетчики в статистике
+                    const stats = post.querySelectorAll('.stat-item span');
+                    if (stats[0]) stats[0].textContent = data.likes_count;
+                    if (stats[1]) stats[1].textContent = data.comments_count;
+                })
+                .catch(error => console.error('Ошибка обновления статистики:', error));
+        });
+    }
+    
+    // Обновляем статистику каждые 10 секунд
+    setInterval(updatePostStats, 10000);
+    
+    // Инициализация при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        updatePostStats();
+        
+        // Проверяем загрузку рекламы и показываем fallback
+        setTimeout(checkAdLoading, 3000);
+        
+        // Фокус на поле создания поста
+        const textarea = document.querySelector('.post-textarea');
+        if (textarea) {
+            textarea.addEventListener('focus', function() {
+                this.parentElement.classList.add('focused');
+            });
+            
+            textarea.addEventListener('blur', function() {
+                this.parentElement.classList.remove('focused');
+            });
+        }
+    });
+    
+    // Проверка загрузки рекламы
+    function checkAdLoading() {
+        const adBlocks = document.querySelectorAll('.adsbygoogle');
+        const fallbacks = document.querySelectorAll('.ad-fallback');
+        
+        adBlocks.forEach((ad, index) => {
+            if (ad.offsetHeight === 0 || ad.innerHTML.trim() === '') {
+                // Реклама не загрузилась, показываем fallback
+                if (fallbacks[index]) {
+                    fallbacks[index].style.display = 'block';
+                }
+            }
+        });
+    }
+    
+    // Добавление изображения
+    function addImage() {
+        document.getElementById('image-input').click();
+    }
+    
+    // Обработка выбора изображения
+    document.getElementById('image-input').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('preview-img').src = e.target.result;
+                document.getElementById('image-preview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Удаление изображения
+    function removeImage() {
+        document.getElementById('image-input').value = '';
+        document.getElementById('image-preview').style.display = 'none';
+        document.getElementById('preview-img').src = '';
+    }
+    
+    // Добавление эмодзи
+    function addEmoji() {
+        const emojis = ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣', '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓', '🤗', '🤔', '🤭', '🤫', '🤥', '😶', '😐', '😑', '😯', '😦', '😧', '😮', '😲', '🥱', '😴', '🤤', '😪', '😵', '🤐', '🥴', '🤢', '🤮', '🤧', '😷', '🤒', '🤕'];
+        const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+        
+        document.getElementById('emoji-field').value = randomEmoji;
+        document.getElementById('selected-emoji').textContent = randomEmoji;
+        document.getElementById('emoji-preview').style.display = 'block';
+    }
+    
+    // Удаление эмодзи
+    function removeEmoji() {
+        document.getElementById('emoji-field').value = '';
+        document.getElementById('emoji-preview').style.display = 'none';
+    }
+    
+    // Добавление геолокации
+    function addLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    // Получаем название места через обратное геокодирование
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const locationName = data.display_name.split(',')[0];
+                            
+                            document.getElementById('location-field').value = `${lat},${lng}`;
+                            document.getElementById('location-name-field').value = locationName;
+                            document.getElementById('selected-location').textContent = locationName;
+                            document.getElementById('location-preview').style.display = 'block';
+                        })
+                        .catch(() => {
+                            // Если не удалось получить название, показываем координаты
+                            document.getElementById('location-field').value = `${lat},${lng}`;
+                            document.getElementById('location-name-field').value = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                            document.getElementById('selected-location').textContent = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                            document.getElementById('location-preview').style.display = 'block';
+                        });
+                },
+                function(error) {
+                    alert('Не удалось получить ваше местоположение. Проверьте разрешения браузера.');
+                }
+            );
+        } else {
+            alert('Геолокация не поддерживается в вашем браузере.');
+        }
+    }
+    
+    // Удаление геолокации
+    function removeLocation() {
+        document.getElementById('location-field').value = '';
+        document.getElementById('location-name-field').value = '';
+        document.getElementById('location-preview').style.display = 'none';
+    }
+</script>
+
+<style>
+    /* Основной макет */
+    .feed-layout {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+    
+    /* Левая колонка с постами */
+    .posts-column {
+        min-width: 0; /* Для правильного отображения grid */
+    }
+    
+    /* Правая колонка с рекламой */
+    .ads-column {
+        position: relative;
+    }
+    
+    .sticky-ads {
+        position: sticky;
+        top: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        max-height: calc(100vh - 4rem);
+        overflow-y: auto;
+        padding-right: 0.5rem;
+    }
+    
+    /* Стилизация скроллбара для sticky-ads */
+    .sticky-ads::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .sticky-ads::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 3px;
+    }
+    
+    .sticky-ads::-webkit-scrollbar-thumb {
+        background: rgba(52, 152, 219, 0.5);
+        border-radius: 3px;
+    }
+    
+    .sticky-ads::-webkit-scrollbar-thumb:hover {
+        background: rgba(52, 152, 219, 0.7);
+    }
+    
+    /* Стилизация скроллбара для Firefox */
+    .sticky-ads {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(52, 152, 219, 0.5) rgba(255, 255, 255, 0.05);
+    }
+    
+    /* Рекламные карточки */
+    .ad-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 1rem;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+    
+    .ad-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+    
+    .ad-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        color: #3498db;
+        font-weight: 600;
+    }
+    
+    .ad-content {
+        min-height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Google AdSense адаптивность */
+    .adsbygoogle {
+        display: block;
+        text-align: center;
+        margin: 0 auto;
+    }
+    
+    /* Fallback текст когда реклама не загрузилась */
+    .ad-fallback {
+        text-align: center;
+        padding: 1rem;
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .ad-fallback h4 {
+        color: #3498db;
+        margin: 0 0 0.75rem 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    
+    .ad-fallback p {
+        margin: 0;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        color: rgba(255, 255, 255, 0.7);
+    }
+    
+    /* Встроенная реклама между постами */
+    .inline-ad {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+    
+    .inline-ad:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+    
+    .inline-ad .ad-header {
+        color: #e74c3c;
+        margin-bottom: 1rem;
+    }
+    
+    .inline-ad .ad-content {
+        min-height: 90px;
+    }
+    
+    /* Создание поста */
+    .create-post-section {
+        margin-bottom: 2rem;
+    }
+    
+    .create-post-card {
+        background: linear-gradient(135deg, rgba(52, 152, 219, 0.15), rgba(46, 204, 113, 0.15));
+        border: 1px solid rgba(52, 152, 219, 0.3);
+        border-radius: 20px;
+        padding: 2rem;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    
+    .create-post-header {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .user-avatar-large {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #3498db, #2ecc71);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+        font-size: 1.5rem;
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    }
+    
+    .create-post-info h3 {
+        color: #ffffff;
+        margin: 0 0 0.5rem 0;
+        font-size: 1.4rem;
+        font-weight: 600;
+    }
+    
+    .create-post-info p {
+        color: rgba(255, 255, 255, 0.7);
+        margin: 0;
+        font-size: 1rem;
+    }
+    
+    .create-post-form {
+        position: relative;
+    }
+    
+    .post-textarea {
+        width: 100%;
+        min-height: 120px;
+        padding: 1.5rem;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.05);
+        color: #ffffff;
+        font-size: 1.1rem;
+        font-family: inherit;
+        resize: vertical;
+        transition: all 0.3s ease;
+    }
+    
+    .post-textarea:focus {
+        outline: none;
+        border-color: #3498db;
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+    }
+    
+    .post-textarea::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+    
+    /* Предварительный просмотр медиа */
+    .image-preview, .emoji-preview, .location-preview {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .image-preview img {
+        max-width: 100px;
+        max-height: 100px;
+        border-radius: 8px;
+        object-fit: cover;
+    }
+    
+    .emoji-preview span {
+        font-size: 2rem;
+    }
+    
+    .location-preview i {
+        color: #e74c3c;
+        font-size: 1.2rem;
+    }
+    
+    .location-preview span {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.9rem;
+    }
+    
+    .remove-image-btn, .remove-emoji-btn, .remove-location-btn {
+        background: rgba(231, 76, 60, 0.2);
+        border: none;
+        color: #e74c3c;
+        padding: 0.5rem;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+    }
+    
+    .remove-image-btn:hover, .remove-emoji-btn:hover, .remove-location-btn:hover {
+        background: rgba(231, 76, 60, 0.4);
+        transform: scale(1.1);
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1.5rem;
+    }
+    
+    .post-options {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .option-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.7);
+        padding: 0.75rem;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+    }
+    
+    .option-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        transform: translateY(-2px);
+    }
+    
+    .publish-btn {
+        background: linear-gradient(45deg, #3498db, #2980b9);
+        border: none;
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    }
+    
+    .publish-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+    }
+    
+    /* Посты */
+    .posts-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    /* Индикатор пересланного поста */
+    .repost-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        background: rgba(52, 152, 219, 0.1);
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .repost-indicator i {
+        color: #3498db;
+        font-size: 0.8rem;
+    }
+    
+    .repost-indicator em {
+        font-style: italic;
+        color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .original-author-link {
+        color: #3498db;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s ease;
+    }
+    
+    .original-author-link:hover {
+        color: #2980b9;
+        text-decoration: underline;
+    }
+    
+    .post-card {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 2rem;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .post-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #3498db, #2ecc71, #f39c12, #e74c3c);
+    }
+    
+    .post-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+    
+    .post-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+    }
+    
+    .post-user-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .post-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #3498db, #2ecc71);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+        font-size: 1.2rem;
+        position: relative;
+    }
+    
+    .post-avatar::after {
+        content: '';
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        width: 12px;
+        height: 12px;
+        background: #2ecc71;
+        border: 2px solid #1a1a2e;
+        border-radius: 50%;
+    }
+    
+    .user-details {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .user-name {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    
+    .user-name a {
+        color: #ffffff;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    
+    .user-name a:hover {
+        color: #3498db;
+    }
+    
+    .post-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .username {
+        color: #3498db;
+        font-weight: 500;
+    }
+    
+    .post-time {
+        color: rgba(255, 255, 255, 0.6);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .post-menu {
+        position: relative;
+    }
+    
+    .menu-btn {
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.6);
+        padding: 0.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1.1rem;
+    }
+    
+    .menu-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+    }
+    
+    .post-content {
+        margin-bottom: 1.5rem;
+    }
+    
+    .post-content p {
+        color: #ffffff;
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin: 0;
+    }
+    
+    /* Изображения в постах */
+    .post-image {
+        margin: 1rem 0;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .post-image-content {
+        width: 100%;
+        max-height: 400px;
+        object-fit: cover;
+        display: block;
+    }
+    
+    /* Эмодзи в постах */
+    .post-emoji {
+        margin: 1rem 0;
+        text-align: center;
+    }
+    
+    .emoji-display {
+        font-size: 3rem;
+        display: inline-block;
+        animation: emoji-bounce 0.6s ease-in-out;
+    }
+    
+    @keyframes emoji-bounce {
+        0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-10px); }
+        60% { transform: translateY(-5px); }
+    }
+    
+    /* Геолокация в постах */
+    .post-location {
+        margin: 1rem 0;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .location-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        color: #e74c3c;
+        font-weight: 500;
+    }
+    
+    .location-info i {
+        font-size: 1.2rem;
+    }
+    
+    .location-map {
+        width: 100%;
+        height: 200px;
+        border-radius: 8px;
+        background: #2c3e50;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .location-map::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 20px;
+        height: 20px;
+        background: #e74c3c;
+        border-radius: 50%;
+        border: 3px solid white;
+        box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+        z-index: 2;
+    }
+    
+    .location-map::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 40px;
+        height: 40px;
+        background: rgba(231, 76, 60, 0.2);
+        border-radius: 50%;
+        animation: location-pulse 2s infinite;
+    }
+    
+    @keyframes location-pulse {
+        0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+    }
+    
+    .post-stats {
+        display: flex;
+        gap: 2rem;
+        padding: 1rem 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 1.5rem;
+    }
+    
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+    }
+    
+    .stat-item i {
+        color: #3498db;
+    }
+    
+    .post-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: space-around;
+    }
+    
+    .action-btn {
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.7);
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.95rem;
+        font-weight: 500;
+        flex: 1;
+        justify-content: center;
+    }
+    
+    .action-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        transform: translateY(-2px);
+    }
+    
+    .action-btn.liked {
+        color: #e74c3c;
+        background: rgba(231, 76, 60, 0.1);
+    }
+    
+    .action-btn.liked:hover {
+        background: rgba(231, 76, 60, 0.2);
+    }
+    
+    /* Комментарии */
+    .comments-section {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .comments-header h4 {
+        color: #ffffff;
+        margin: 0 0 1rem 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    
+    .comment-form {
+        margin-bottom: 1.5rem;
+    }
+    
+    .comment-input-wrapper {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+    }
+    
+    .comment-input {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        color: #ffffff;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+    
+    .comment-input:focus {
+        outline: none;
+        border-color: #3498db;
+        background: rgba(255, 255, 255, 0.08);
+    }
+    
+    .comment-submit {
+        background: #3498db;
+        border: none;
+        color: white;
+        padding: 0.75rem;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+    }
+    
+    .comment-submit:hover {
+        background: #2980b9;
+        transform: translateY(-2px);
+    }
+    
+    .comments-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .comment-item {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+        border-left: 3px solid #3498db;
+    }
+    
+    .comment-avatar {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #f39c12, #e67e22);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+    
+    .comment-content {
+        flex: 1;
+    }
+    
+    .comment-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .comment-author {
+        color: #3498db;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .comment-time {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+    }
+    
+    .comment-text {
+        color: rgba(255, 255, 255, 0.9);
+        margin: 0 0 0.75rem 0;
+        line-height: 1.5;
+    }
+    
+    .comment-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .comment-action-btn {
+        background: none;
+        border: none;
+        color: #e74c3c;
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .comment-action-btn:hover {
+        background: rgba(231, 76, 60, 0.1);
+    }
+    
+    /* Пустое состояние */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .empty-icon {
+        font-size: 4rem;
+        color: rgba(255, 255, 255, 0.3);
+        margin-bottom: 1.5rem;
+    }
+    
+    .empty-state h3 {
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 1rem;
+        font-size: 1.8rem;
+    }
+    
+    .empty-state p {
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 2rem;
+        font-size: 1.1rem;
+    }
+    
+    .empty-actions .btn {
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(45deg, #3498db, #2980b9);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(52, 152, 219, 0.3);
+    }
+    
+    /* Адаптивность */
+    @media (max-width: 1200px) {
+        .feed-layout {
+            grid-template-columns: 1fr 280px;
+            gap: 1.5rem;
+        }
+    }
+    
+    @media (max-width: 900px) {
+        .feed-layout {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .ads-column {
+            display: none;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .feed-layout {
+            padding: 0 0.5rem;
+        }
+        
+        .create-post-card {
+            padding: 1.5rem;
+        }
+        
+        .create-post-header {
+            flex-direction: column;
+            text-align: center;
+            gap: 1rem;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .post-options {
+            justify-content: center;
+        }
+        
+        .publish-btn {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .post-card {
+            padding: 1.5rem;
+        }
+        
+        .post-actions {
+            flex-direction: column;
+        }
+        
+        .action-btn {
+            justify-content: center;
+        }
+        
+        .post-stats {
+            flex-direction: column;
+            gap: 1rem;
+        }
+    }
+</style>
+{% endblock %}

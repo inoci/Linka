@@ -1,0 +1,394 @@
+{% extends "base.html" %}
+
+{% block title %}Реклама - Линка{% endblock %}
+
+{% block content %}
+<div class="reklama-container">
+    <!-- Левая колонка с информацией -->
+    <div class="reklama-info">
+        <div class="reklama-content">
+            <h1>{{ header }}</h1>
+            <p class="reklama-description">{{ description }}</p>
+            
+            <div class="reklama-features">
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <div>
+                        <h3>Мобильные устройства</h3>
+                        <p>Используйте Линка на смартфонах и планшетах</p>
+                    </div>
+                </div>
+                
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fas fa-laptop"></i>
+                    </div>
+                    <div>
+                        <h3>Компьютеры</h3>
+                        <p>Полноценный доступ с десктопов и ноутбуков</p>
+                    </div>
+                </div>
+                
+                <div class="feature">
+                    <div class="feature-icon">
+                        <i class="fas fa-sync-alt"></i>
+                    </div>
+                    <div>
+                        <h3>Синхронизация</h3>
+                        <p>Ваши данные всегда актуальны на всех устройствах</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Правая колонка с устройствами -->
+    <div class="reklama-devices">
+        <h2>Доступные платформы</h2>
+        
+        <div class="device-cards">
+            <!-- Мобильное устройство -->
+            <div class="device-card mobile">
+                <div class="device-icon">📱</div>
+                <h3>Мобильная версия</h3>
+                <p>Оптимизирована для смартфонов и планшетов</p>
+                <div class="device-status">
+                    <span class="status-badge available">Доступно</span>
+                </div>
+                <div class="device-features">
+                    <span class="feature-tag">Адаптивный дизайн</span>
+                    <span class="feature-tag">Быстрая загрузка</span>
+                    <span class="feature-tag">Touch-управление</span>
+                </div>
+            </div>
+            
+            <!-- Десктоп -->
+            <div class="device-card desktop">
+                <div class="device-icon">💻</div>
+                <h3>Десктоп версия</h3>
+                <p>Полнофункциональная версия для компьютеров</p>
+                <div class="device-status">
+                    <span class="status-badge available">Доступно</span>
+                </div>
+                <div class="device-features">
+                    <span class="feature-tag">Расширенный функционал</span>
+                    <span class="feature-tag">Клавиатурные сокращения</span>
+                    <span class="feature-tag">Большие экраны</span>
+                </div>
+            </div>
+            
+            <!-- Умные часы -->
+            <div class="device-card smartwatch">
+                <div class="device-icon">⌚</div>
+                <h3>Умные часы</h3>
+                <p>Уведомления и базовые функции на запястье</p>
+                <div class="device-status">
+                    <span class="status-badge coming-soon">Скоро</span>
+                </div>
+                <div class="device-features">
+                    <span class="feature-tag">Уведомления</span>
+                    <span class="feature-tag">Быстрые действия</span>
+                    <span class="feature-tag">Компактность</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="reklama-cta">
+            <h3>Готовы попробовать?</h3>
+            <p>Линка уже доступна на вашем устройстве!</p>
+            <a href="{{ url_for('index') }}" class="btn btn-primary">
+                <i class="fas fa-rocket"></i> Перейти к ленте
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .reklama-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4rem;
+        max-width: 1400px;
+        margin: 0 auto;
+        min-height: calc(100vh - 200px);
+        align-items: center;
+    }
+    
+    .reklama-info {
+        padding: 2rem;
+    }
+    
+    .reklama-content h1 {
+        font-size: 3rem;
+        margin-bottom: 2rem;
+        color: #ffffff;
+        background: linear-gradient(45deg, #3498db, #2ecc71);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1.2;
+    }
+    
+    .reklama-description {
+        font-size: 1.3rem;
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 3rem;
+        line-height: 1.6;
+    }
+    
+    .reklama-features {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+    
+    .feature {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        padding: 1.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .feature:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateX(10px);
+    }
+    
+    .feature-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(45deg, #f39c12, #e67e22);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        color: white;
+        flex-shrink: 0;
+    }
+    
+    .feature h3 {
+        color: #ffffff;
+        margin-bottom: 0.5rem;
+        font-size: 1.3rem;
+    }
+    
+    .feature p {
+        color: rgba(255, 255, 255, 0.7);
+        margin: 0;
+        font-size: 1rem;
+        line-height: 1.5;
+    }
+    
+    .reklama-devices {
+        padding: 2rem;
+    }
+    
+    .reklama-devices h2 {
+        text-align: center;
+        color: #ffffff;
+        font-size: 2.5rem;
+        margin-bottom: 3rem;
+        background: linear-gradient(45deg, #e74c3c, #f39c12);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .device-cards {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+    
+    .device-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 2rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .device-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #3498db, #2ecc71, #f39c12, #e74c3c);
+    }
+    
+    .device-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+    
+    .device-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+    
+    .device-card h3 {
+        color: #ffffff;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+        text-align: center;
+    }
+    
+    .device-card p {
+        color: rgba(255, 255, 255, 0.8);
+        text-align: center;
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+    }
+    
+    .device-status {
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-badge.available {
+        background: linear-gradient(45deg, #2ecc71, #27ae60);
+        color: white;
+    }
+    
+    .status-badge.coming-soon {
+        background: linear-gradient(45deg, #f39c12, #e67e22);
+        color: white;
+    }
+    
+    .device-features {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+    
+    .feature-tag {
+        background: rgba(52, 152, 219, 0.2);
+        color: #3498db;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        border: 1px solid rgba(52, 152, 219, 0.3);
+    }
+    
+    .reklama-cta {
+        text-align: center;
+        padding: 2rem;
+        background: rgba(52, 152, 219, 0.1);
+        border-radius: 20px;
+        border: 1px solid rgba(52, 152, 219, 0.2);
+    }
+    
+    .reklama-cta h3 {
+        color: #ffffff;
+        margin-bottom: 1rem;
+        font-size: 1.8rem;
+    }
+    
+    .reklama-cta p {
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 2rem;
+        font-size: 1.1rem;
+    }
+    
+    .btn {
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(45deg, #3498db, #2980b9);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 30px rgba(52, 152, 219, 0.4);
+    }
+    
+    /* Адаптивность */
+    @media (max-width: 1200px) {
+        .reklama-container {
+            gap: 3rem;
+        }
+        
+        .reklama-content h1 {
+            font-size: 2.5rem;
+        }
+        
+        .reklama-devices h2 {
+            font-size: 2rem;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .reklama-container {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            padding: 1rem;
+        }
+        
+        .reklama-info {
+            order: 2;
+            text-align: center;
+        }
+        
+        .reklama-devices {
+            order: 1;
+        }
+        
+        .reklama-content h1 {
+            font-size: 2rem;
+        }
+        
+        .reklama-description {
+            font-size: 1.1rem;
+        }
+        
+        .feature {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .device-card {
+            padding: 1.5rem;
+        }
+        
+        .device-icon {
+            font-size: 2.5rem;
+        }
+    }
+</style>
+{% endblock %}

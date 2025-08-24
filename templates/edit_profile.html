@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block title %}Редактирование профиля - Линка{% endblock %}
+
+{% block content %}
+<div class="edit-profile-container">
+    <div class="edit-profile-card">
+        <div class="edit-profile-header">
+            <h1><i class="fas fa-edit"></i> Редактирование профиля</h1>
+            <p>Измените информацию о себе</p>
+        </div>
+        
+        <form method="POST" class="edit-profile-form">
+            <div class="form-group">
+                <label for="username">Имя пользователя</label>
+                <input type="text" id="username" name="username" class="form-control" 
+                       value="{{ user.username }}" required>
+                <small class="form-hint">Это имя будет отображаться в URL профиля</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="first_name">Имя</label>
+                <input type="text" id="first_name" name="first_name" class="form-control" 
+                       value="{{ user.first_name }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="last_name">Фамилия</label>
+                <input type="text" id="last_name" name="last_name" class="form-control" 
+                       value="{{ user.last_name }}">
+            </div>
+            
+            <div class="form-group">
+                <label for="bio">О себе</label>
+                <textarea id="bio" name="bio" class="form-control" rows="4" 
+                          placeholder="Расскажите немного о себе...">{{ user.bio or '' }}</textarea>
+                <small class="form-hint">Необязательно, максимум 500 символов</small>
+            </div>
+            
+            <div class="form-actions">
+                <a href="{{ url_for('profile', username=user.username) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Отмена
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Сохранить изменения
+                </button>
+            </div>
+        </form>
+        
+        <div class="edit-profile-info">
+            <h3><i class="fas fa-info-circle"></i> Информация</h3>
+            <ul>
+                <li>Имя пользователя должно быть уникальным</li>
+                <li>Имя и фамилия будут отображаться в профиле</li>
+                <li>О себе - это краткое описание для других пользователей</li>
+                <li>Email и пароль можно изменить в настройках безопасности</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<style>
+    .edit-profile-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .edit-profile-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 2.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+    
+    .edit-profile-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .edit-profile-header h1 {
+        color: #ffffff;
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(45deg, #3498db, #2ecc71);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .edit-profile-header p {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1.1rem;
+    }
+    
+    .edit-profile-form {
+        margin-bottom: 2.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 2rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+        color: #ffffff;
+        font-size: 1.1rem;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 1rem 1.25rem;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        font-family: inherit;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #3498db;
+        background: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
+    
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+    
+    .form-hint {
+        display: block;
+        margin-top: 0.5rem;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.9rem;
+        font-style: italic;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .btn {
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 150px;
+        justify-content: center;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(45deg, #3498db, #2980b9);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+    }
+    
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+    }
+    
+    .edit-profile-info {
+        background: rgba(52, 152, 219, 0.1);
+        border-radius: 12px;
+        padding: 1.5rem;
+        border-left: 4px solid #3498db;
+    }
+    
+    .edit-profile-info h3 {
+        color: #3498db;
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .edit-profile-info ul {
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0;
+        padding-left: 1.5rem;
+        line-height: 1.6;
+    }
+    
+    .edit-profile-info li {
+        margin-bottom: 0.5rem;
+    }
+    
+    .edit-profile-info li:last-child {
+        margin-bottom: 0;
+    }
+    
+    /* Адаптивность */
+    @media (max-width: 768px) {
+        .edit-profile-container {
+            padding: 1rem;
+        }
+        
+        .edit-profile-card {
+            padding: 1.5rem;
+        }
+        
+        .edit-profile-header h1 {
+            font-size: 2rem;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .btn {
+            width: 100%;
+            max-width: 300px;
+        }
+    }
+</style>
+{% endblock %}

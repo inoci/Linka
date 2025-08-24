@@ -1,0 +1,563 @@
+{% extends "base.html" %}
+
+{% block title %}Профиль {{ user.username }} - Линка{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <!-- Профиль пользователя -->
+    <div class="card profile-header">
+        <div class="profile-info">
+            <div class="profile-avatar">
+                {{ user.username[0].upper() }}
+            </div>
+            <div class="profile-details">
+                <h1>{{ user.first_name }} {{ user.last_name }}</h1>
+                <p class="username">@{{ user.username }}</p>
+                {% if user.bio %}
+                    <p class="bio">{{ user.bio }}</p>
+                {% endif %}
+                <div class="profile-stats">
+                    <div class="stat">
+                        <span class="stat-number">{{ posts|length }}</span>
+                        <span class="stat-label">постов</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">{{ followers_count }}</span>
+                        <span class="stat-label">подписчиков</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">{{ following_count }}</span>
+                        <span class="stat-label">подписок</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="profile-actions">
+            {% if user.id == session.user_id %}
+                <!-- Редактирование профиля -->
+                <a href="{{ url_for('edit_profile', username=user.username) }}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Редактировать профиль
+                </a>
+            {% else %}
+                <!-- Подписка/отписка -->
+                <a href="{{ url_for('follow_user', username=user.username) }}" 
+                   class="btn {% if is_following %}btn-warning{% else %}btn-success{% endif %}">
+                    <i class="fas fa-{% if is_following %}user-minus{% else %}user-plus{% endif %}"></i>
+                    {% if is_following %}Отписаться{% else %}Подписаться{% endif %}
+                </a>
+                
+                <!-- Кнопка сообщения -->
+                <button class="btn btn-primary" onclick="showMessageForm()">
+                    <i class="fas fa-envelope"></i> Сообщение
+                </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Посты пользователя -->
+    {% if posts %}
+        <h2 style="color: #ffffff; margin: 2rem 0 1rem 0; font-size: 1.8rem;">
+            <i class="fas fa-newspaper"></i> Посты
+        </h2>
+        
+        {% for post in posts %}
+            {% if post.user %}
+            <div class="card post">
+                <div class="post-header">
+                    <div class="post-avatar">
+                        {{ post.user.username[0].upper() }}
+                    </div>
+                    <div class="post-user-info">
+                        <h4>
+                            <a href="{{ url_for('profile', username=post.user.username) }}" style="color: #3498db;">
+                                {{ post.user.first_name }} {{ post.user.last_name }}
+                            </a>
+                            <span style="color: rgba(255,255,255,0.6); font-weight: normal;">@{{ post.user.username }}</span>
+                        </h4>
+                        <div class="post-time">
+                            <i class="fas fa-clock"></i> {{ post.created_at.strftime('%d.%m.%Y %H:%M') }}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="post-content">
+                    {{ post.content }}
+                    
+                    <!-- Отображение изображения -->
+                    {% if post.image %}
+                    <div class="post-image">
+                        <img src="{{ url_for('static', filename=post.image) }}" alt="Изображение в посте" class="post-image-content">
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Отображение эмодзи -->
+                    {% if post.emoji %}
+                    <div class="post-emoji">
+                        <span class="emoji-display">{{ post.emoji }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Отображение геолокации -->
+                    {% if post.location %}
+                    <div class="post-location">
+                        <div class="location-info">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>{{ post.location_name or post.location }}</span>
+                        </div>
+                        <div class="location-map" id="map-{{ post.id }}" data-lat="{{ post.location.split(',')[0] }}" data-lng="{{ post.location.split(',')[1] }}"></div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="post-actions">
+                    <!-- Лайк -->
+                    <a href="{{ url_for('like_post', post_id=post.id) }}" 
+                       class="action-btn like-btn {% if post.id in user_liked_posts %}liked{% endif %}"
+                       data-post-id="{{ post.id }}">
+                        <i class="{% if post.id in user_liked_posts %}fas fa-heart{% else %}far fa-heart{% endif %}"></i>
+                        <span class="like-count">{{ post.likes }}</span>
+                    </a>
+                    
+                    <!-- Комментарии -->
+                    <button class="action-btn comment-toggle" onclick="toggleComments({{ post.id }})">
+                        <i class="fas fa-comment"></i>
+                        <span class="comment-count">{{ post.comments_list|length }}</span>
+                    </button>
+                    
+                    <!-- Шаринг -->
+                    <a href="{{ url_for('share_post', post_id=post.id) }}" class="action-btn">
+                        <i class="fas fa-share-alt"></i>
+                        Поделиться
+                    </a>
+                </div>
+                
+                <!-- Секция комментариев -->
+                <div class="comments-section" id="comments-{{ post.id }}" style="display: none;">
+                    <!-- Форма комментария -->
+                    <form method="POST" action="{{ url_for('create_comment', post_id=post.id) }}" class="comment-form">
+                        <input type="text" name="content" class="comment-input" placeholder="Написать комментарий..." required>
+                        <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                            <i class="fas fa-paper-plane"></i> Отправить
+                        </button>
+                    </form>
+                    
+                    <!-- Список комментариев -->
+                    <div class="comments-list">
+                        {% for comment in post.comments_list %}
+                        <div class="comment">
+                            <div class="comment-header">
+                                <span class="comment-user">{{ comment.user.username }}</span>
+                                <span class="comment-time">{{ comment.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                            </div>
+                            <div class="comment-content">{{ comment.content }}</div>
+                            
+                            {% if comment.user_id == session.user_id %}
+                            <div style="margin-top: 0.5rem;">
+                                <a href="{{ url_for('delete_comment', comment_id=comment.id) }}" 
+                                   class="btn btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
+                                   onclick="return confirm('Удалить комментарий?')">
+                                    <i class="fas fa-trash"></i> Удалить
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        <div class="card" style="text-align: center; padding: 3rem;">
+            <i class="fas fa-newspaper" style="font-size: 4rem; color: rgba(255,255,255,0.3); margin-bottom: 1rem;"></i>
+            <h3 style="color: rgba(255,255,255,0.7); margin-bottom: 1rem;">Пока нет постов</h3>
+            <p style="color: rgba(255,255,255,0.5);">
+                {% if user.id == session.user_id %}
+                    Создайте свой первый пост в ленте!
+                {% else %}
+                    У этого пользователя пока нет постов
+                {% endif %}
+            </p>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    // Переключение комментариев
+    function toggleComments(postId) {
+        const commentsSection = document.getElementById(`comments-${postId}`);
+        const isVisible = commentsSection.style.display !== 'none';
+        
+        if (isVisible) {
+            commentsSection.style.display = 'none';
+        } else {
+            commentsSection.style.display = 'block';
+        }
+    }
+    
+    // Показать форму сообщения
+    function showMessageForm() {
+        alert('Функция сообщений будет добавлена позже!');
+    }
+    
+    // Обновление статистики постов через AJAX
+    function updatePostStats() {
+        const posts = document.querySelectorAll('.post');
+        
+        posts.forEach(post => {
+            const postId = post.querySelector('.like-btn').dataset.postId;
+            const likeCount = post.querySelector('.like-count');
+            const commentCount = post.querySelector('.comment-count');
+            
+            fetch(`/api/post/${postId}/stats`)
+                .then(response => response.json())
+                .then(data => {
+                    if (likeCount) likeCount.textContent = data.likes_count;
+                    if (commentCount) commentCount.textContent = data.comments_count;
+                })
+                .catch(error => console.error('Ошибка обновления статистики:', error));
+        });
+    }
+    
+    // Обновляем статистику каждые 10 секунд
+    setInterval(updatePostStats, 10000);
+    
+    // Инициализация при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        updatePostStats();
+    });
+</script>
+
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, rgba(52, 152, 219, 0.2), rgba(46, 204, 113, 0.2));
+        border: 1px solid rgba(52, 152, 219, 0.3);
+        padding: 2rem;
+    }
+    
+    .profile-info {
+        display: flex;
+        gap: 2rem;
+        align-items: flex-start;
+        margin-bottom: 2rem;
+    }
+    
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #3498db, #2ecc71);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+        font-size: 3rem;
+        flex-shrink: 0;
+        position: relative;
+    }
+    
+    .profile-avatar::after {
+        content: '';
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        width: 20px;
+        height: 20px;
+        background: #2ecc71;
+        border: 3px solid #1a1a2e;
+        border-radius: 50%;
+    }
+    
+    .profile-details {
+        flex: 1;
+    }
+    
+    .profile-details h1 {
+        color: #ffffff;
+        margin-bottom: 0.5rem;
+        font-size: 2.5rem;
+    }
+    
+    .username {
+        color: #3498db;
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+        font-weight: 500;
+    }
+    
+    .bio {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin-bottom: 2rem;
+        max-width: 600px;
+    }
+    
+    .profile-stats {
+        display: flex;
+        gap: 3rem;
+    }
+    
+    .stat {
+        text-align: center;
+    }
+    
+    .stat-number {
+        display: block;
+        font-size: 2rem;
+        font-weight: bold;
+        color: #3498db;
+    }
+    
+    .stat-label {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .profile-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .post {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .post::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #3498db, #2ecc71, #f39c12, #e74c3c);
+    }
+    
+    .post-avatar {
+        position: relative;
+    }
+    
+    .post-avatar::after {
+        content: '';
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        width: 12px;
+        height: 12px;
+        background: #2ecc71;
+        border: 2px solid #1a1a2e;
+        border-radius: 50%;
+    }
+    
+    .action-btn {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .action-btn::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: width 0.3s ease, height 0.3s ease;
+    }
+    
+    .action-btn:hover::before {
+        width: 100%;
+        height: 100%;
+    }
+    
+    .action-btn i {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .comments-section {
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        margin-top: 1rem;
+        padding: 1rem;
+    }
+    
+    .comment {
+        border-left: 3px solid #3498db;
+        margin-left: 1rem;
+    }
+    
+    .comment-form {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .comment-input {
+        font-family: inherit;
+    }
+    
+    /* Изображения в постах */
+    .post-image {
+        margin: 1rem 0;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .post-image-content {
+        width: 100%;
+        max-height: 400px;
+        object-fit: cover;
+        display: block;
+    }
+    
+    /* Эмодзи в постах */
+    .post-emoji {
+        margin: 1rem 0;
+        text-align: center;
+    }
+    
+    .emoji-display {
+        font-size: 3rem;
+        display: inline-block;
+        animation: emoji-bounce 0.6s ease-in-out;
+    }
+    
+    @keyframes emoji-bounce {
+        0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-10px); }
+        60% { transform: translateY(-5px); }
+    }
+    
+    /* Геолокация в постах */
+    .post-location {
+        margin: 1rem 0;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .location-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        color: #e74c3c;
+        font-weight: 500;
+    }
+    
+    .location-info i {
+        font-size: 1.2rem;
+    }
+    
+    .location-map {
+        width: 100%;
+        height: 200px;
+        border-radius: 8px;
+        background: #2c3e50;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .location-map::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 20px;
+        height: 20px;
+        background: #e74c3c;
+        border-radius: 50%;
+        border: 3px solid white;
+        box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+        z-index: 2;
+    }
+    
+    .location-map::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 40px;
+        height: 40px;
+        background: rgba(231, 76, 60, 0.2);
+        border-radius: 50%;
+        animation: location-pulse 2s infinite;
+    }
+    
+    @keyframes location-pulse {
+        0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+    }
+    
+    .btn-danger {
+        background: linear-gradient(45deg, #e74c3c, #c0392b);
+        border: none;
+        color: white;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+    }
+    
+    /* Адаптивность */
+    @media (max-width: 768px) {
+        .profile-info {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .profile-stats {
+            justify-content: center;
+        }
+        
+        .profile-actions {
+            justify-content: center;
+        }
+        
+        .profile-details h1 {
+            font-size: 2rem;
+        }
+        
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            font-size: 2.5rem;
+        }
+    }
+    
+    /* Ограничение ширины профиля */
+    .profile-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+    
+    @media (max-width: 900px) {
+        .profile-container {
+            max-width: 100%;
+            padding: 0 1rem;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .profile-container {
+            padding: 0 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
