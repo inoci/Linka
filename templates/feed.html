@@ -6,6 +6,8 @@
 <div class="feed-layout">
     <!-- Левая колонка с постами -->
     <div class="posts-column">
+
+
         <!-- Создание поста -->
         <div class="create-post-section">
             <div class="create-post-card">
@@ -20,67 +22,215 @@
                 </div>
                 
                 <form method="POST" action="{{ url_for('create_post') }}" class="create-post-form" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <textarea name="content" class="post-textarea" placeholder="Напишите что-нибудь интересное..." rows="4" required></textarea>
-                        
-                        <!-- Скрытые поля для медиа -->
-                        <input type="hidden" name="emoji" id="emoji-field" value="">
-                        <input type="hidden" name="location" id="location-field" value="">
-                        <input type="hidden" name="location_name" id="location-name-field" value="">
-                        
-                        <!-- Поле для изображения -->
-                        <input type="file" name="image" id="image-input" accept="image/*" style="display: none;">
-                        
-                        <!-- Предварительный просмотр изображения -->
-                        <div id="image-preview" class="image-preview" style="display: none;">
-                            <img id="preview-img" src="" alt="Предварительный просмотр">
-                            <button type="button" class="remove-image-btn" onclick="removeImage()">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                        
-                        <!-- Отображение эмодзи -->
-                        <div id="emoji-preview" class="emoji-preview" style="display: none;">
-                            <span id="selected-emoji"></span>
-                            <button type="button" class="remove-emoji-btn" onclick="removeEmoji()">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                        
-                        <!-- Отображение геолокации -->
-                        <div id="location-preview" class="location-preview" style="display: none;">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span id="selected-location"></span>
-                            <button type="button" class="remove-location-btn" onclick="removeLocation()">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="form-actions">
-                        <div class="post-options">
-                            <button type="button" class="option-btn" title="Добавить фото" onclick="addImage()">
-                                <i class="fas fa-image"></i>
-                            </button>
-                            <button type="button" class="option-btn" title="Добавить эмодзи" onclick="addEmoji()">
-                                <i class="fas fa-smile"></i>
-                            </button>
-                            <button type="button" class="option-btn" title="Добавить местоположение" onclick="addLocation()">
-                                <i class="fas fa-map-marker-alt"></i>
-                            </button>
-                        </div>
-                        <button type="submit" class="publish-btn">
-                            <i class="fas fa-paper-plane"></i>
-                            <span>Опубликовать</span>
-                        </button>
-                    </div>
-                </form>
+        <div class="form-group">
+                         <textarea name="content" class="post-textarea" placeholder="Напишите что-нибудь интересное..." rows="4" required></textarea>
+                         
+                         <!-- Скрытые поля для медиа -->
+                         <input type="hidden" name="emoji" id="emoji-field" value="">
+                         <input type="hidden" name="location" id="location-field" value="">
+                         <input type="hidden" name="location_name" id="location-name-field" value="">
+                         
+                         <!-- Поле для изображения -->
+                         <input type="file" name="image" id="image-input" accept="image/*" style="display: none;">
+                         
+                         <!-- Поле для видео -->
+                         <input type="file" name="video" id="video-input" accept="video/*" style="display: none;">
+                         
+                         <!-- Настройки поста -->
+                         <div class="post-settings" style="display: none;">
+                             <div class="setting-group">
+                                 <label for="visibility">Видимость:</label>
+                                 <select name="visibility" id="visibility" class="post-select">
+                                     <option value="public">Публичный</option>
+                                     <option value="friends">Только друзья</option>
+                                     <option value="private">Приватный</option>
+                                 </select>
+        </div>
+                             
+                             <div class="setting-group">
+                                 <label for="category">Категория:</label>
+                                 <select name="category" id="category" class="post-select">
+                                     <option value="">Выберите категорию</option>
+                                     <option value="Общее">Общее</option>
+                                     <option value="Технологии">Технологии</option>
+                                     <option value="Развлечения">Развлечения</option>
+                                     <option value="Спорт">Спорт</option>
+                                     <option value="Музыка">Музыка</option>
+                                     <option value="Кино">Кино</option>
+                                     <option value="Кулинария">Кулинария</option>
+                                     <option value="Путешествия">Путешествия</option>
+                                     <option value="Мода">Мода</option>
+                                     <option value="Авто">Авто</option>
+                                 </select>
+                             </div>
+                             
+                             <div class="setting-group">
+                                 <label for="tags">Теги (через запятую):</label>
+                                 <input type="text" name="tags" id="tags" class="post-input" placeholder="например: технологии, программирование">
+                             </div>
+                         </div>
+                         
+                         <!-- Предварительный просмотр изображения -->
+                         <div id="image-preview" class="image-preview" style="display: none;">
+                             <img id="preview-img" src="" alt="Предварительный просмотр">
+                             <button type="button" class="remove-image-btn" onclick="removeImage()">
+                                 <i class="fas fa-times"></i>
+                             </button>
+                         </div>
+                         
+                         <!-- Предварительный просмотр видео -->
+                         <div id="video-preview" class="video-preview" style="display: none;">
+                             <video id="preview-video" controls>
+                                 <source id="video-source" src="" type="video/mp4">
+                                 Ваш браузер не поддерживает видео.
+                             </video>
+                             <button type="button" class="remove-video-btn" onclick="removeVideo()">
+                                 <i class="fas fa-times"></i>
+                             </button>
+                         </div>
+                         
+                         <!-- Отображение эмодзи -->
+                         <div id="emoji-preview" class="emoji-preview" style="display: none;">
+                             <span id="selected-emoji"></span>
+                             <button type="button" class="remove-emoji-btn" onclick="removeEmoji()">
+                                 <i class="fas fa-times"></i>
+                             </button>
+                         </div>
+                         
+                         <!-- Отображение геолокации -->
+                         <div id="location-preview" class="location-preview" style="display: none;">
+                             <i class="fas fa-map-marker-alt"></i>
+                             <span id="selected-location"></span>
+                             <button type="button" class="remove-location-btn" onclick="removeLocation()">
+                                 <i class="fas fa-times"></i>
+                             </button>
+                         </div>
+                     </div>
+                     <div class="form-actions">
+                         <div class="post-options">
+                             <button type="button" class="option-btn" title="Добавить фото" onclick="addImage()">
+                                 <i class="fas fa-image"></i>
+                             </button>
+                             <button type="button" class="option-btn" title="Добавить видео" onclick="addVideo()">
+                                 <i class="fas fa-video"></i>
+                             </button>
+                             <button type="button" class="option-btn" title="Выбрать эмодзи" onclick="showEmojiPicker()">
+                                 <i class="fas fa-smile"></i>
+                             </button>
+                             <button type="button" class="option-btn" title="Добавить местоположение" onclick="addLocation()">
+                                 <i class="fas fa-map-marker-alt"></i>
+                             </button>
+                         </div>
+                         <button type="submit" class="publish-btn" onclick="showPostSettings(event)">
+                             <i class="fas fa-paper-plane"></i>
+                             <span>Опубликовать</span>
+                         </button>
+                     </div>
+    </form>
+            </div>
+</div>
+
+        <!-- Эмодзи-пикер -->
+        <div id="emoji-picker" class="emoji-picker" style="display: none;">
+            <div class="emoji-picker-header">
+                <h4>Выберите эмодзи</h4>
+                <button type="button" class="close-emoji-btn" onclick="closeEmojiPicker()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="emoji-grid">
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😀')">😀</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😃')">😃</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😄')">😄</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😁')">😁</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😆')">😆</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😅')">😅</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😂')">😂</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🤣')">🤣</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😊')">😊</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😇')">😇</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🙂')">🙂</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🙃')">🙃</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😉')">😉</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😌')">😌</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😍')">😍</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🥰')">🥰</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😘')">😘</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😗')">😗</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😙')">😙</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😚')">😚</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😋')">😋</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😛')">😛</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😝')">😝</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😜')">😜</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🤪')">🤪</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🤨')">🤨</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🧐')">🧐</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🤓')">🤓</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😎')">😎</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🤩')">🤩</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🥳')">🥳</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😏')">😏</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😒')">😒</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😞')">😞</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😔')">😔</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😟')">😟</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😕')">😕</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🙁')">🙁</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('☹️')">☹️</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😣')">😣</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😖')">😖</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😫')">😫</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😩')">😩</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🥺')">🥺</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😢')">😢</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😭')">😭</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😤')">😤</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😠')">😠</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😡')">😡</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🤬')">🤬</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🤯')">🤯</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😳')">😳</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🥵')">🥵</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🥶')">🥶</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😱')">😱</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😨')">😨</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😰')">😰</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😥')">😥</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😓')">😓</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🤗')">🤗</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🤔')">🤔</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🤭')">🤭</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🤫')">🤫</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🤥')">🤥</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😶')">😶</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😐')">😐</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😑')">😑</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😯')">😯</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😦')">😦</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😧')">😧</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😮')">😮</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😲')">😲</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🥱')">🥱</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😴')">😴</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🤤')">🤤</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😪')">😪</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😵')">😵</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🤐')">🤐</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🥴')">🥴</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🤢')">🤢</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🤮')">🤮</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🤧')">🤧</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('😷')">😷</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🤒')">🤒</button>
+                <button type="button" class="emoji-btn" onclick="selectEmoji('🤕')">🤕</button>
             </div>
         </div>
 
         <!-- Посты -->
-        {% if posts %}
+{% if posts %}
             <div class="posts-container">
-                {% for post in posts %}
+    {% for post in posts %}
                     {% if post.user %}
                     <article class="post-card" data-post-id="{{ post.id }}">
                         {% if post.original_post %}
@@ -93,19 +243,41 @@
                         </div>
                         {% endif %}
                         
-                        <div class="post-header">
+                        {% if post.post_type == 'community' %}
+                        <div class="community-indicator">
+                            <i class="fas fa-users"></i>
+                            <em>Пост из сообщества </em>
+                            <a href="{{ url_for('community', community_id=post.community.id) }}" class="community-link">
+                                {{ post.community.name }}
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+        <div class="post-header">
                             <div class="post-user-info">
-                                <div class="post-avatar">
-                                    {{ post.user.username[0].upper() }}
-                                </div>
+            <div class="post-avatar">
+                                    {% if post.user and post.user.username %}
+                                        {{ post.user.username[0].upper() }}
+                                    {% else %}
+                                        ?
+                                    {% endif %}
+            </div>
                                 <div class="user-details">
                                     <h4 class="user-name">
-                                        <a href="{{ url_for('profile', username=post.user.username) }}">
-                                            {{ post.user.first_name }} {{ post.user.last_name }}
-                                        </a>
-                                    </h4>
+                                        {% if post.user and post.user.username %}
+                                            <a href="{{ url_for('profile', username=post.user.username) }}">
+                        {{ post.user.first_name }} {{ post.user.last_name }}
+                    </a>
+                                        {% else %}
+                                            <span>Пользователь удален</span>
+                                        {% endif %}
+                </h4>
                                     <div class="post-meta">
-                                        <span class="username">@{{ post.user.username }}</span>
+                                        {% if post.user and post.user.username %}
+                                            <span class="username">@{{ post.user.username }}</span>
+                                        {% else %}
+                                            <span class="username">@deleted</span>
+                                        {% endif %}
                                         <span class="post-time">
                                             <i class="fas fa-clock"></i>
                                             {{ post.created_at.strftime('%d.%m.%Y в %H:%M') }}
@@ -117,16 +289,26 @@
                                 <button class="menu-btn" title="Действия">
                                     <i class="fas fa-ellipsis-h"></i>
                                 </button>
-                            </div>
-                        </div>
-                        
-                        <div class="post-content">
+            </div>
+        </div>
+        
+        <div class="post-content">
                             <p>{{ post.content }}</p>
                             
                             <!-- Отображение изображения -->
                             {% if post.image %}
                             <div class="post-image">
                                 <img src="{{ url_for('static', filename=post.image) }}" alt="Изображение в посте" class="post-image-content">
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Отображение видео -->
+                            {% if post.video %}
+                            <div class="post-video">
+                                <video controls>
+                                    <source src="{{ url_for('static', filename=post.video) }}" type="video/mp4">
+                                    Ваш браузер не поддерживает видео.
+                                </video>
                             </div>
                             {% endif %}
                             
@@ -147,29 +329,55 @@
                                 <div class="location-map" id="map-{{ post.id }}" data-lat="{{ post.location.split(',')[0] }}" data-lng="{{ post.location.split(',')[1] }}"></div>
                             </div>
                             {% endif %}
+                            
+                            <!-- Отображение тегов -->
+                            {% if post.tags %}
+                            <div class="post-tags">
+                                {% for tag in post.get_tags_list() %}
+                                <span class="tag">{{ tag }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Отображение категории -->
+                            {% if post.category %}
+                            <div class="post-category">
+                                <span class="category-badge" style="background-color: {{ post.category.color if post.category.color else '#3498db' }}">
+                                    <i class="fas fa-tag"></i> {{ post.category }}
+                                </span>
+                            </div>
+                            {% endif %}
                         </div>
                         
                         <div class="post-stats">
                             <div class="stat-item">
                                 <i class="fas fa-heart"></i>
-                                <span>{{ post.likes }}</span>
+                                <span>{{ post.likes_count }}</span>
                             </div>
                             <div class="stat-item">
                                 <i class="fas fa-comment"></i>
-                                <span>{{ post.comments_list|length }}</span>
+                                <span>{{ post._comments_list|length }}</span>
                             </div>
                             <div class="stat-item">
                                 <i class="fas fa-share"></i>
                                 <span>0</span>
                             </div>
-                        </div>
-                        
-                        <div class="post-actions">
-                            <button class="action-btn like-btn {% if post.id in user_liked_posts %}liked{% endif %}" 
-                                    data-post-id="{{ post.id }}" onclick="toggleLike({{ post.id }})">
-                                <i class="{% if post.id in user_liked_posts %}fas fa-heart{% else %}far fa-heart{% endif %}"></i>
-                                <span>Лайк</span>
-                            </button>
+        </div>
+        
+        <div class="post-actions">
+                            {% if post.post_type == 'community' %}
+                                <button class="action-btn like-btn {% if post.user_liked %}liked{% endif %}" 
+                                        data-post-id="{{ post.id }}" onclick="toggleCommunityLike({{ post.id }})">
+                                    <i class="{% if post.user_liked %}fas fa-heart{% else %}far fa-heart{% endif %}"></i>
+                                    <span>{% if post.user_liked %}Лайкнуто{% else %}Лайк{% endif %}</span>
+                                </button>
+                            {% else %}
+                                <button class="action-btn like-btn {% if post.id in user_liked_posts %}liked{% endif %}" 
+                                        data-post-id="{{ post.id }}" onclick="toggleLike({{ post.id }})">
+                                    <i class="{% if post.id in user_liked_posts %}fas fa-heart{% else %}far fa-heart{% endif %}"></i>
+                                    <span>Лайк</span>
+                                </button>
+                            {% endif %}
                             
                             <button class="action-btn comment-btn" onclick="toggleComments({{ post.id }})">
                                 <i class="fas fa-comment"></i>
@@ -182,13 +390,51 @@
                             </button>
                         </div>
                         
+                        <!-- Реакции -->
+                        <div class="reactions-container">
+                            <button class="reaction-btn" onclick="addReaction({{ post.id }}, 'like')" data-reaction="like">
+                                <i class="far fa-heart"></i>
+                                <span class="reaction-count" id="like-count-{{ post.id }}">{{ post.reactions.like if post.reactions and post.reactions.like else 0 }}</span>
+                            </button>
+                            <button class="reaction-btn" onclick="addReaction({{ post.id }}, 'laugh')" data-reaction="laugh">
+                                <i class="far fa-laugh"></i>
+                                <span class="reaction-count" id="laugh-count-{{ post.id }}">{{ post.reactions.laugh if post.reactions and post.reactions.laugh else 0 }}</span>
+                            </button>
+                            <button class="reaction-btn" onclick="addReaction({{ post.id }}, 'surprise')" data-reaction="surprise">
+                                <i class="far fa-surprise"></i>
+                                <span class="reaction-count" id="surprise-count-{{ post.id }}">{{ post.reactions.surprise if post.reactions and post.reactions.surprise else 0 }}</span>
+                            </button>
+                            <button class="reaction-btn" onclick="addReaction({{ post.id }}, 'sad')" data-reaction="sad">
+                                <i class="far fa-sad-tear"></i>
+                                <span class="reaction-count" id="sad-count-{{ post.id }}">{{ post.reactions.sad if post.reactions and post.reactions.sad else 0 }}</span>
+                            </button>
+                            <button class="reaction-btn" onclick="addReaction({{ post.id }}, 'love')" data-reaction="love">
+                                <i class="far fa-heart"></i>
+                                <span class="reaction-count" id="love-count-{{ post.id }}">{{ post.reactions.love if post.reactions and post.reactions.love else 0 }}</span>
+                            </button>
+                            <button class="reaction-btn" onclick="addReaction({{ post.id }}, 'angry')" data-reaction="angry">
+                                <i class="far fa-angry"></i>
+                                <span class="reaction-count" id="angry-count-{{ post.id }}">{{ post.reactions.angry if post.reactions and post.reactions.angry else 0 }}</span>
+                            </button>
+                        </div>
+                        
                         <!-- Секция комментариев -->
                         <div class="comments-section" id="comments-{{ post.id }}" style="display: none;">
                             <div class="comments-header">
-                                <h4>Комментарии ({{ post.comments_list|length }})</h4>
+                                <h4>Комментарии ({{ post._comments_list|length }})</h4>
                             </div>
                             
                             <!-- Форма комментария -->
+                            {% if post.post_type == 'community' %}
+                            <form class="comment-form" onsubmit="addCommunityComment(event, {{ post.id }})">
+                                <div class="comment-input-wrapper">
+                                    <input type="text" name="content" class="comment-input" placeholder="Написать комментарий..." required>
+                                    <button type="submit" class="comment-submit">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </form>
+                            {% else %}
                             <form method="POST" action="{{ url_for('create_comment', post_id=post.id) }}" class="comment-form">
                                 <div class="comment-input-wrapper">
                                     <input type="text" name="content" class="comment-input" placeholder="Написать комментарий..." required>
@@ -197,32 +443,50 @@
                                     </button>
                                 </div>
                             </form>
+                            {% endif %}
                             
                             <!-- Список комментариев -->
                             <div class="comments-list">
-                                {% for comment in post.comments_list %}
+                                {% for comment in post._comments_list %}
                                 <div class="comment-item">
                                     <div class="comment-avatar">
-                                        {{ comment.user.username[0].upper() }}
+                                        {% if post.post_type == 'community' %}
+                                            {{ comment.user.username[0].upper() if comment.user else 'U' }}
+                                        {% else %}
+                                            {{ comment.user.username[0].upper() }}
+                                        {% endif %}
                                     </div>
                                     <div class="comment-content">
                                         <div class="comment-header">
-                                            <span class="comment-author">{{ comment.user.username }}</span>
+                                            <span class="comment-author">
+                                                {% if post.post_type == 'community' %}
+                                                    {{ comment.user.username if comment.user else 'Unknown' }}
+                                                {% else %}
+                                                    {{ comment.user.username }}
+                                                {% endif %}
+                                            </span>
                                             <span class="comment-time">{{ comment.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
                                         </div>
                                         <p class="comment-text">{{ comment.content }}</p>
                                         
                                         {% if comment.user_id == session.user_id %}
                                         <div class="comment-actions">
+                                            {% if post.post_type == 'community' %}
+                                            <button class="comment-action-btn" onclick="deleteCommunityComment({{ comment.id }})">
+                                                <i class="fas fa-trash"></i>
+                                                <span>Удалить</span>
+                                            </button>
+                                            {% else %}
                                             <button class="comment-action-btn" onclick="deleteComment({{ comment.id }})">
                                                 <i class="fas fa-trash"></i>
                                                 <span>Удалить</span>
                                             </button>
+                                            {% endif %}
                                         </div>
                                         {% endif %}
-                                    </div>
-                                </div>
-                                {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
                             </div>
                         </div>
                     </article>
@@ -258,7 +522,7 @@
                     {% endif %}
                 {% endfor %}
             </div>
-        {% else %}
+{% else %}
             <div class="empty-state">
                 <div class="empty-icon">
                     <i class="fas fa-newspaper"></i>
@@ -271,8 +535,8 @@
                         Создать первый пост
                     </button>
                 </div>
-            </div>
-        {% endif %}
+    </div>
+{% endif %}
     </div>
     
     <!-- Правая колонка с рекламой -->
@@ -376,7 +640,213 @@
     
     // Лайк поста
     function toggleLike(postId) {
-        window.location.href = `/like/${postId}`;
+        const likeBtn = document.querySelector(`[data-post-id="${postId}"].like-btn`);
+        const likeIcon = likeBtn.querySelector('i');
+        const likeText = likeBtn.querySelector('span');
+        
+        // Отправляем запрос на сервер
+        fetch(`/like_post/${postId}`, {
+            method: 'POST'
+        })
+        .then(response => {
+            if (response.status === 429) {
+                // Ошибка кулдауна
+                return response.json().then(data => {
+                    throw new Error(data.error || 'Слишком часто лайкаете');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Обновляем внешний вид кнопки
+                if (data.liked) {
+                    likeBtn.classList.add('liked');
+                    likeIcon.className = 'fas fa-heart';
+                    likeText.textContent = 'Лайкнуто';
+                } else {
+                    likeBtn.classList.remove('liked');
+                    likeIcon.className = 'far fa-heart';
+                    likeText.textContent = 'Лайк';
+                }
+                
+                // Обновляем счетчик лайков
+                const likeCount = document.querySelector(`#like-count-${postId}`);
+                if (likeCount) {
+                    likeCount.textContent = data.likes_count;
+                }
+                
+                // Показываем уведомление об успехе
+                showLikeNotification(data.liked ? 'Лайк добавлен!' : 'Лайк убран!', 'success');
+            } else {
+                console.error('Ошибка при лайке:', data.error);
+                showLikeNotification(data.error || 'Ошибка при лайке', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            showLikeNotification(error.message || 'Ошибка при лайке', 'error');
+        });
+    }
+    
+    // Показ уведомлений о лайках
+    function showLikeNotification(message, type) {
+        // Создаем элемент уведомления
+        const notification = document.createElement('div');
+        notification.className = `like-notification ${type}`;
+        notification.textContent = message;
+        
+        // Добавляем стили
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            z-index: 10000;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            max-width: 300px;
+            word-wrap: break-word;
+        `;
+        
+        // Устанавливаем цвет в зависимости от типа
+        if (type === 'success') {
+            notification.style.background = 'linear-gradient(45deg, #27ae60, #2ecc71)';
+        } else if (type === 'error') {
+            notification.style.background = 'linear-gradient(45deg, #e74c3c, #c0392b)';
+        } else if (type === 'info') {
+            notification.style.background = 'linear-gradient(45deg, #3498db, #2980b9)';
+        }
+        
+        // Добавляем в DOM
+        document.body.appendChild(notification);
+        
+        // Показываем уведомление
+        setTimeout(() => {
+            notification.style.transform = 'translateX(0)';
+        }, 100);
+        
+        // Скрываем через 3 секунды
+        setTimeout(() => {
+            notification.style.transform = 'translateX(-100%)';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 3000);
+    }
+    
+    // Функция для лайков постов сообществ
+    function toggleCommunityLike(postId) {
+        const likeBtn = document.querySelector(`[data-post-id="${postId}"].like-btn`);
+        const likeIcon = likeBtn.querySelector('i');
+        const likeText = likeBtn.querySelector('span');
+        
+        // Отправляем запрос на сервер
+        fetch(`/like_community_post/${postId}`, {
+            method: 'POST'
+        })
+        .then(response => {
+            if (response.status === 429) {
+                // Ошибка кулдауна
+                return response.json().then(data => {
+                    throw new Error(data.error || 'Слишком часто лайкаете');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Обновляем внешний вид кнопки
+                if (data.liked) {
+                    likeBtn.classList.add('liked');
+                    likeIcon.className = 'fas fa-heart';
+                    likeText.textContent = 'Лайкнуто';
+                } else {
+                    likeBtn.classList.remove('liked');
+                    likeIcon.className = 'far fa-heart';
+                    likeText.textContent = 'Лайк';
+                }
+                
+                // Обновляем счетчик лайков в статистике поста
+                const postCard = likeBtn.closest('.post-card');
+                if (postCard) {
+                    const likeCount = postCard.querySelector('.post-stats .stat-item:first-child span');
+                    if (likeCount) {
+                        likeCount.textContent = data.likes_count;
+                    }
+                }
+                
+                // Показываем уведомление об успехе
+                showLikeNotification(data.liked ? 'Лайк добавлен!' : 'Лайк убран!', 'success');
+            } else {
+                console.error('Ошибка при лайке:', data.error);
+                showLikeNotification(data.error || 'Ошибка при лайке', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            showLikeNotification(error.message || 'Ошибка при лайке', 'error');
+        });
+    }
+    
+    // Функция для добавления комментариев к постам сообществ
+    function addCommunityComment(event, postId) {
+        event.preventDefault();
+        
+        const form = event.target;
+        const content = form.querySelector('input[name="content"]').value.trim();
+        
+        if (!content) return;
+        
+        // Отправляем запрос на сервер
+        fetch(`/add_community_comment/${postId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ content: content })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Очищаем форму
+                form.querySelector('input[name="content"]').value = '';
+                
+                // Перезагружаем страницу для отображения нового комментария
+                window.location.reload();
+            } else {
+                console.error('Ошибка при добавлении комментария:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+        });
+    }
+    
+    // Функция для удаления комментариев к постам сообществ
+    function deleteCommunityComment(commentId) {
+        if (confirm('Удалить комментарий?')) {
+            fetch(`/delete_community_comment/${commentId}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Перезагружаем страницу для обновления комментариев
+                    window.location.reload();
+                } else {
+                    console.error('Ошибка при удалении комментария:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+            });
+        }
     }
     
     // Шаринг поста
@@ -419,6 +889,8 @@
     document.addEventListener('DOMContentLoaded', function() {
         updatePostStats();
         
+
+        
         // Проверяем загрузку рекламы и показываем fallback
         setTimeout(checkAdLoading, 3000);
         
@@ -433,6 +905,24 @@
                 this.parentElement.classList.remove('focused');
             });
         }
+        
+        // Загружаем реакции для всех постов
+        document.querySelectorAll('.post-card').forEach(postCard => {
+            const postId = postCard.dataset.postId;
+            if (postId) {
+                loadReactions(postId);
+            }
+        });
+        
+        // Обработчик клавиши Escape для закрытия popup
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const popup = document.getElementById('post-settings-popup');
+                if (popup && popup.style.display !== 'none') {
+                    closePostSettings();
+                }
+            }
+        });
     });
     
     // Проверка загрузки рекламы
@@ -475,20 +965,52 @@
         document.getElementById('preview-img').src = '';
     }
     
-    // Добавление эмодзи
-    function addEmoji() {
-        const emojis = ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣', '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓', '🤗', '🤔', '🤭', '🤫', '🤥', '😶', '😐', '😑', '😯', '😦', '😧', '😮', '😲', '🥱', '😴', '🤤', '😪', '😵', '🤐', '🥴', '🤢', '🤮', '🤧', '😷', '🤒', '🤕'];
-        const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-        
-        document.getElementById('emoji-field').value = randomEmoji;
-        document.getElementById('selected-emoji').textContent = randomEmoji;
-        document.getElementById('emoji-preview').style.display = 'block';
+    // Добавление видео
+    function addVideo() {
+        document.getElementById('video-input').click();
     }
     
-    // Удаление эмодзи
-    function removeEmoji() {
-        document.getElementById('emoji-field').value = '';
-        document.getElementById('emoji-preview').style.display = 'none';
+    // Обработка выбора видео
+    document.getElementById('video-input').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('preview-video').src = e.target.result;
+                document.getElementById('video-source').src = e.target.result;
+                document.getElementById('video-preview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Удаление видео
+    function removeVideo() {
+        document.getElementById('video-input').value = '';
+        document.getElementById('video-preview').style.display = 'none';
+        document.getElementById('preview-video').src = '';
+        document.getElementById('video-source').src = '';
+    }
+    
+    // Показать эмодзи-пикер
+    function showEmojiPicker() {
+        const emojiPicker = document.getElementById('emoji-picker');
+        if (emojiPicker) {
+            emojiPicker.style.display = 'block';
+        }
+    }
+    
+    // Выбор эмодзи
+    function selectEmoji(emoji) {
+        document.getElementById('emoji-field').value = emoji;
+        document.getElementById('selected-emoji').textContent = emoji;
+        document.getElementById('emoji-preview').style.display = 'block';
+        document.getElementById('emoji-picker').style.display = 'none';
+    }
+    
+    // Закрыть эмодзи-пикер
+    function closeEmojiPicker() {
+        document.getElementById('emoji-picker').style.display = 'none';
     }
     
     // Добавление геолокации
@@ -533,6 +1055,254 @@
         document.getElementById('location-name-field').value = '';
         document.getElementById('location-preview').style.display = 'none';
     }
+    
+    // Добавление реакции
+    function addReaction(postId, reactionType) {
+        fetch(`/reaction/${postId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ reaction_type: reactionType })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateReactionUI(postId, reactionType, data.reaction_removed);
+                // Обновляем счетчики реакций в реальном времени
+                updateReactionCounts(postId, reactionType, data.reaction_removed);
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка при добавлении реакции:', error);
+        });
+    }
+    
+    // Обновление счетчиков реакций в реальном времени
+    function updateReactionCounts(postId, reactionType, removed) {
+        if (removed) {
+            // Если реакция удалена, уменьшаем счетчик
+            const countElement = document.getElementById(`${reactionType}-count-${postId}`);
+            if (countElement) {
+                let currentCount = parseInt(countElement.textContent) || 0;
+                currentCount = Math.max(0, currentCount - 1);
+                countElement.textContent = currentCount;
+            }
+            showReactionNotification('Реакция удалена', 'info');
+        } else {
+            // Если добавлена новая реакция, нужно сбросить все предыдущие счетчики
+            // и увеличить только новый
+            const allReactionTypes = ['like', 'laugh', 'surprise', 'sad', 'love', 'angry'];
+            
+            allReactionTypes.forEach(type => {
+                const countElement = document.getElementById(`${type}-count-${postId}`);
+                if (countElement) {
+                    if (type === reactionType) {
+                        // Увеличиваем счетчик для новой реакции
+                        let currentCount = parseInt(countElement.textContent) || 0;
+                        currentCount += 1;
+                        countElement.textContent = currentCount;
+                    } else {
+                        // Сбрасываем счетчики для других реакций (если они были)
+                        const wasActive = document.querySelector(`button[data-reaction="${type}"][onclick*="${postId}"]`).classList.contains('active');
+                        if (wasActive) {
+                            let currentCount = parseInt(countElement.textContent) || 0;
+                            currentCount = Math.max(0, currentCount - 1);
+                            countElement.textContent = currentCount;
+                        }
+                    }
+                }
+            });
+            
+            // Показываем уведомление о новой реакции
+            const reactionNames = {
+                'like': '❤️ Лайк',
+                'laugh': '😄 Смех',
+                'surprise': '😲 Удивление',
+                'sad': '😢 Грусть',
+                'love': '💕 Любовь',
+                'angry': '😠 Злость'
+            };
+            showReactionNotification(`Добавлена реакция: ${reactionNames[reactionType] || reactionType}`, 'success');
+        }
+    }
+    
+    // Показ уведомлений о реакциях
+    function showReactionNotification(message, type) {
+        // Создаем элемент уведомления
+        const notification = document.createElement('div');
+        notification.className = `reaction-notification ${type}`;
+        notification.textContent = message;
+        
+        // Добавляем стили
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            z-index: 10000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            max-width: 300px;
+            word-wrap: break-word;
+        `;
+        
+        // Устанавливаем цвет в зависимости от типа
+        if (type === 'success') {
+            notification.style.background = 'linear-gradient(45deg, #27ae60, #2ecc71)';
+        } else if (type === 'info') {
+            notification.style.background = 'linear-gradient(45deg, #3498db, #2980b9)';
+        }
+        
+        // Добавляем в DOM
+        document.body.appendChild(notification);
+        
+        // Показываем уведомление
+        setTimeout(() => {
+            notification.style.transform = 'translateX(0)';
+        }, 100);
+        
+        // Скрываем через 3 секунды
+        setTimeout(() => {
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 3000);
+    }
+    
+    // Обновление UI реакций
+    function updateReactionUI(postId, reactionType, removed) {
+        // Убираем активное состояние у всех кнопок реакций для этого поста
+        document.querySelectorAll(`button[data-reaction][onclick*="${postId}"]`).forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        if (!removed) {
+            // Добавляем активное состояние к выбранной реакции
+            const reactionBtn = document.querySelector(`button[data-reaction="${reactionType}"][onclick*="${postId}"]`);
+            if (reactionBtn) {
+                reactionBtn.classList.add('active');
+            }
+        }
+    }
+    
+    // Загрузка реакций для поста
+    function loadReactions(postId) {
+        fetch(`/api/post/${postId}/reactions`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.reaction_counts) {
+                // Обновляем счетчики реакций
+                Object.keys(data.reaction_counts).forEach(reactionType => {
+                    const countElement = document.getElementById(`${reactionType}-count-${postId}`);
+                    if (countElement) {
+                        countElement.textContent = data.reaction_counts[reactionType];
+                    }
+                });
+                
+                // Обновляем активную реакцию пользователя
+                if (data.user_reaction) {
+                    document.querySelectorAll(`button[data-reaction][onclick*="${postId}"]`).forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    const activeBtn = document.querySelector(`button[data-reaction="${data.user_reaction}"][onclick*="${postId}"]`);
+                    if (activeBtn) {
+                        activeBtn.classList.add('active');
+                    }
+                }
+            }
+        });
+    }
+    
+    // Загрузка реакций для всех постов при загрузке страницы
+    function loadAllReactions() {
+        const posts = document.querySelectorAll('.post-card');
+        posts.forEach(post => {
+            const postId = post.querySelector('.action-btn').getAttribute('data-post-id');
+            if (postId) {
+                loadReactions(postId);
+            }
+        });
+    }
+    
+    // Загружаем реакции при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        loadAllReactions();
+        
+        // Сбрасываем кулдаун пользователя при загрузке страницы
+        resetUserCooldown();
+    });
+    
+    // Сброс кулдауна пользователя
+    function resetUserCooldown() {
+        fetch('/api/reset-cooldown', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Кулдаун пользователя сброшен');
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка при сбросе кулдауна:', error);
+        });
+    }
+    
+    // Показать popup с настройками поста
+    function showPostSettings(event) {
+        event.preventDefault();
+        
+        // Проверяем, что есть контент для поста
+        const content = document.getElementById('emoji-field').value || 
+                       document.getElementById('image-input').files[0] || 
+                       document.getElementById('video-input').files[0] ||
+                       document.querySelector('.post-textarea').value.trim();
+        
+        if (!content) {
+            alert('Добавьте текст, изображение, видео или эмодзи к посту');
+            return;
+        }
+        
+        // Синхронизируем значения между скрытыми полями и popup
+        document.getElementById('popup-visibility').value = document.getElementById('visibility').value;
+        document.getElementById('popup-category').value = document.getElementById('category').value;
+        document.getElementById('popup-tags').value = document.getElementById('tags').value;
+        
+        // Показываем popup
+        document.getElementById('post-settings-popup').style.display = 'block';
+        document.body.style.overflow = 'hidden'; // Блокируем скролл
+    }
+    
+    // Закрыть popup с настройками поста
+    function closePostSettings() {
+        document.getElementById('post-settings-popup').style.display = 'none';
+        document.body.style.overflow = ''; // Возвращаем скролл
+    }
+    
+    // Опубликовать пост с настройками
+    function publishPost() {
+        // Синхронизируем значения из popup в скрытые поля
+        document.getElementById('visibility').value = document.getElementById('popup-visibility').value;
+        document.getElementById('category').value = document.getElementById('popup-category').value;
+        document.getElementById('tags').value = document.getElementById('popup-tags').value;
+        
+        // Закрываем popup
+        closePostSettings();
+        
+        // Отправляем форму
+        document.querySelector('.create-post-form').submit();
+    }
+    
+
+    
+
 </script>
 
 <style>
@@ -864,6 +1634,291 @@
         box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
     }
     
+    /* Настройки поста */
+    .post-settings {
+        margin: 1rem 0;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .setting-group {
+        margin-bottom: 1rem;
+    }
+    
+    .setting-group:last-child {
+        margin-bottom: 0;
+    }
+    
+    .setting-group label {
+        display: block;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .post-select, .post-input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        color: #ffffff;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+    
+    .post-select:focus, .post-input:focus {
+        outline: none;
+        border-color: #3498db;
+        background: rgba(255, 255, 255, 0.08);
+    }
+    
+    .post-select option {
+        background: #2c3e50;
+        color: #ffffff;
+    }
+    
+    /* Эмодзи-пикер */
+    .emoji-picker {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #2c3e50;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        padding: 1.5rem;
+        z-index: 1000;
+        max-width: 500px;
+        max-height: 400px;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+    
+    .emoji-picker-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .emoji-picker-header h4 {
+        color: #ffffff;
+        margin: 0;
+        font-size: 1.2rem;
+    }
+    
+    .close-emoji-btn {
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.6);
+        padding: 0.5rem;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .close-emoji-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+    }
+    
+    .emoji-grid {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 0.5rem;
+    }
+    
+    .emoji-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        padding: 0.75rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .emoji-btn:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: scale(1.1);
+    }
+    
+    /* Видео в постах */
+    .post-video {
+        margin: 1rem 0;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .post-video video {
+        width: 100%;
+        max-height: 400px;
+        object-fit: cover;
+        display: block;
+    }
+    
+    /* Предварительный просмотр видео */
+    .video-preview {
+        position: relative;
+        margin: 1rem 0;
+        border-radius: 12px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .video-preview video {
+        width: 100%;
+        max-height: 300px;
+        object-fit: cover;
+        display: block;
+    }
+    
+    .remove-video-btn {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        background: rgba(231, 76, 60, 0.8);
+        border: none;
+        color: white;
+        padding: 0.5rem;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+    }
+    
+    .remove-video-btn:hover {
+        background: rgba(231, 76, 60, 1);
+        transform: scale(1.1);
+    }
+    
+    /* Теги в постах */
+    .post-tags {
+        margin: 1rem 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .tag {
+        background: rgba(52, 152, 219, 0.2);
+        color: #3498db;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        border: 1px solid rgba(52, 152, 219, 0.3);
+        transition: all 0.3s ease;
+    }
+    
+    .tag:hover {
+        background: rgba(52, 152, 219, 0.3);
+        transform: translateY(-1px);
+    }
+    
+    /* Категории в постах */
+    .post-category {
+        margin: 1rem 0;
+    }
+    
+    .category-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* Реакции */
+    .reactions-container {
+        display: flex;
+        gap: 0.5rem;
+        margin: 1rem 0;
+        flex-wrap: wrap;
+    }
+    
+    .reaction-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.7);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .reaction-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        transform: translateY(-2px);
+    }
+    
+    .reaction-btn.active {
+        background: rgba(52, 152, 219, 0.2);
+        border-color: #3498db;
+        color: #3498db;
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+    }
+    
+    .reaction-btn.active:hover {
+        background: rgba(52, 152, 219, 0.3);
+        transform: scale(1.1);
+        box-shadow: 0 6px 16px rgba(52, 152, 219, 0.4);
+    }
+    
+    /* Уведомления о лайках */
+    .like-notification {
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .like-notification.success {
+        border-color: rgba(39, 174, 96, 0.3);
+    }
+    
+    .like-notification.error {
+        border-color: rgba(231, 76, 60, 0.3);
+    }
+    
+    .like-notification.info {
+        border-color: rgba(52, 152, 219, 0.3);
+    }
+    
+    .reaction-count {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.8);
+        padding: 0.2rem 0.5rem;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        min-width: 20px;
+        text-align: center;
+    }
+    
     /* Посты */
     .posts-container {
         display: flex;
@@ -890,9 +1945,41 @@
     }
     
     .repost-indicator em {
-        font-style: italic;
-        color: rgba(255, 255, 255, 0.7);
-    }
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.community-indicator {
+    background: rgba(52, 152, 219, 0.1);
+    border: 1px solid rgba(52, 152, 219, 0.3);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.community-indicator i {
+    color: #3498db;
+    font-size: 0.8rem;
+}
+
+.community-indicator em {
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.community-link {
+    color: #3498db;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.community-link:hover {
+    text-decoration: underline;
+}
     
     .original-author-link {
         color: #3498db;
@@ -1053,6 +2140,21 @@
     }
     
     .post-image-content {
+        width: 100%;
+        max-height: 400px;
+        object-fit: cover;
+        display: block;
+    }
+    
+    /* Видео в постах */
+    .post-video {
+        margin: 1rem 0;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .post-video video {
         width: 100%;
         max-height: 400px;
         object-fit: cover;
@@ -1453,5 +2555,281 @@
             gap: 1rem;
         }
     }
+    
+    /* Popup с настройками поста */
+    .post-settings-popup {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .popup-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(10px);
+    }
+    
+    .popup-content {
+        position: relative;
+        background: linear-gradient(135deg, #2c3e50, #34495e);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        padding: 0;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.8);
+        animation: popupSlideIn 0.3s ease-out;
+        /* Убираем transform для лучшего центрирования */
+        margin: auto;
+    }
+    
+    @keyframes popupSlideIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+    
+    .popup-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem 2rem 1rem 2rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        background: linear-gradient(135deg, rgba(52, 152, 219, 0.2), rgba(46, 204, 113, 0.2));
+        border-radius: 20px 20px 0 0;
+    }
+    
+    .popup-header h3 {
+        color: #ffffff;
+        margin: 0;
+        font-size: 1.4rem;
+        font-weight: 600;
+    }
+    
+    .close-popup-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: rgba(255, 255, 255, 0.7);
+        padding: 0.75rem;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+    
+    .close-popup-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        transform: scale(1.1);
+    }
+    
+    .popup-body {
+        padding: 2rem;
+    }
+    
+    .popup-body .setting-group {
+        margin-bottom: 2rem;
+    }
+    
+    .popup-body .setting-group:last-child {
+        margin-bottom: 0;
+    }
+    
+    .popup-body .setting-group label {
+        display: block;
+        color: #ffffff;
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .popup-body .post-select,
+    .popup-body .post-input {
+        width: 100%;
+        padding: 1rem;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        color: #ffffff;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .popup-body .post-select:focus,
+    .popup-body .post-input:focus {
+        outline: none;
+        border-color: #3498db;
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+    }
+    
+    .popup-body .post-select option {
+        background: #2c3e50;
+        color: #ffffff;
+        padding: 0.5rem;
+    }
+    
+    .setting-hint {
+        display: block;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        font-style: italic;
+    }
+    
+    .popup-footer {
+        display: flex;
+        gap: 1rem;
+        padding: 1.5rem 2rem 2rem 2rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 0 0 20px 20px;
+    }
+    
+    .popup-footer .btn {
+        flex: 1;
+        padding: 1rem 1.5rem;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        text-decoration: none;
+    }
+    
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        transform: translateY(-2px);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(45deg, #3498db, #2980b9);
+        color: white;
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+    }
+    
+    /* Адаптивность для popup */
+    @media (max-width: 600px) {
+        .popup-content {
+            width: 95%;
+            margin: 1rem;
+        }
+        
+        .popup-header,
+        .popup-body,
+        .popup-footer {
+            padding: 1rem 1.5rem;
+        }
+        
+        .popup-footer {
+            flex-direction: column;
+        }
+        
+        .popup-footer .btn {
+            width: 100%;
+        }
+    }
+    
+
+
+    
+
 </style>
+
+        <!-- Popup с настройками поста -->
+        <div id="post-settings-popup" class="post-settings-popup" style="display: none;">
+            <div class="popup-overlay" onclick="closePostSettings()"></div>
+            <div class="popup-content">
+                <div class="popup-header">
+                    <h3>Настройки поста</h3>
+                    <button type="button" class="close-popup-btn" onclick="closePostSettings()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="popup-body">
+                    <div class="setting-group">
+                        <label for="popup-visibility">Видимость:</label>
+                        <select name="popup-visibility" id="popup-visibility" class="post-select">
+                            <option value="public">🌍 Публичный - видят все</option>
+                            <option value="friends">👥 Только друзья - видят подписчики</option>
+                            <option value="private">🔒 Приватный - видите только вы</option>
+                        </select>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="popup-category">Категория:</label>
+                        <select name="popup-category" id="popup-category" class="post-select">
+                            <option value="">📂 Выберите категорию</option>
+                            <option value="Общее">🌐 Общее</option>
+                            <option value="Технологии">💻 Технологии</option>
+                            <option value="Развлечения">🎮 Развлечения</option>
+                            <option value="Спорт">⚽ Спорт</option>
+                            <option value="Музыка">🎵 Музыка</option>
+                            <option value="Кино">🎬 Кино</option>
+                            <option value="Кулинария">🍳 Кулинария</option>
+                            <option value="Путешествия">✈️ Путешествия</option>
+                            <option value="Мода">👗 Мода</option>
+                            <option value="Авто">🚗 Авто</option>
+                        </select>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="popup-tags">Теги (через запятую):</label>
+                        <input type="text" name="popup-tags" id="popup-tags" class="post-input" placeholder="например: технологии, программирование, python">
+                        <small class="setting-hint">Теги помогут другим пользователям найти ваш пост</small>
+                    </div>
+                </div>
+                
+                <div class="popup-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closePostSettings()">
+                        <i class="fas fa-times"></i> Отмена
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="publishPost()">
+                        <i class="fas fa-paper-plane"></i> Опубликовать
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
 {% endblock %}

@@ -3,561 +3,1130 @@
 {% block title %}Профиль {{ user.username }} - Линка{% endblock %}
 
 {% block content %}
-<div class="profile-container">
-    <!-- Профиль пользователя -->
-    <div class="card profile-header">
-        <div class="profile-info">
-            <div class="profile-avatar">
-                {{ user.username[0].upper() }}
-            </div>
-            <div class="profile-details">
-                <h1>{{ user.first_name }} {{ user.last_name }}</h1>
-                <p class="username">@{{ user.username }}</p>
-                {% if user.bio %}
-                    <p class="bio">{{ user.bio }}</p>
-                {% endif %}
-                <div class="profile-stats">
-                    <div class="stat">
-                        <span class="stat-number">{{ posts|length }}</span>
-                        <span class="stat-label">постов</span>
+<div class="feed-layout">
+    <!-- Левая колонка с профилем и постами -->
+    <div class="posts-column">
+        <!-- Профиль пользователя -->
+        <div class="profile-header-section">
+            <div class="profile-header-card">
+                <div class="profile-info">
+                    <div class="profile-avatar-large">
+                        {{ user.username[0].upper() }}
                     </div>
-                    <div class="stat">
-                        <span class="stat-number">{{ followers_count }}</span>
-                        <span class="stat-label">подписчиков</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat-number">{{ following_count }}</span>
-                        <span class="stat-label">подписок</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="profile-actions">
-            {% if user.id == session.user_id %}
-                <!-- Редактирование профиля -->
-                <a href="{{ url_for('edit_profile', username=user.username) }}" class="btn btn-primary">
-                    <i class="fas fa-edit"></i> Редактировать профиль
-                </a>
-            {% else %}
-                <!-- Подписка/отписка -->
-                <a href="{{ url_for('follow_user', username=user.username) }}" 
-                   class="btn {% if is_following %}btn-warning{% else %}btn-success{% endif %}">
-                    <i class="fas fa-{% if is_following %}user-minus{% else %}user-plus{% endif %}"></i>
-                    {% if is_following %}Отписаться{% else %}Подписаться{% endif %}
-                </a>
-                
-                <!-- Кнопка сообщения -->
-                <button class="btn btn-primary" onclick="showMessageForm()">
-                    <i class="fas fa-envelope"></i> Сообщение
-                </button>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Посты пользователя -->
-    {% if posts %}
-        <h2 style="color: #ffffff; margin: 2rem 0 1rem 0; font-size: 1.8rem;">
-            <i class="fas fa-newspaper"></i> Посты
-        </h2>
-        
-        {% for post in posts %}
-            {% if post.user %}
-            <div class="card post">
-                <div class="post-header">
-                    <div class="post-avatar">
-                        {{ post.user.username[0].upper() }}
-                    </div>
-                    <div class="post-user-info">
-                        <h4>
-                            <a href="{{ url_for('profile', username=post.user.username) }}" style="color: #3498db;">
-                                {{ post.user.first_name }} {{ post.user.last_name }}
-                            </a>
-                            <span style="color: rgba(255,255,255,0.6); font-weight: normal;">@{{ post.user.username }}</span>
-                        </h4>
-                        <div class="post-time">
-                            <i class="fas fa-clock"></i> {{ post.created_at.strftime('%d.%m.%Y %H:%M') }}
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="post-content">
-                    {{ post.content }}
-                    
-                    <!-- Отображение изображения -->
-                    {% if post.image %}
-                    <div class="post-image">
-                        <img src="{{ url_for('static', filename=post.image) }}" alt="Изображение в посте" class="post-image-content">
-                    </div>
-                    {% endif %}
-                    
-                    <!-- Отображение эмодзи -->
-                    {% if post.emoji %}
-                    <div class="post-emoji">
-                        <span class="emoji-display">{{ post.emoji }}</span>
-                    </div>
-                    {% endif %}
-                    
-                    <!-- Отображение геолокации -->
-                    {% if post.location %}
-                    <div class="post-location">
-                        <div class="location-info">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>{{ post.location_name or post.location }}</span>
-                        </div>
-                        <div class="location-map" id="map-{{ post.id }}" data-lat="{{ post.location.split(',')[0] }}" data-lng="{{ post.location.split(',')[1] }}"></div>
-                    </div>
-                    {% endif %}
-                </div>
-                
-                <div class="post-actions">
-                    <!-- Лайк -->
-                    <a href="{{ url_for('like_post', post_id=post.id) }}" 
-                       class="action-btn like-btn {% if post.id in user_liked_posts %}liked{% endif %}"
-                       data-post-id="{{ post.id }}">
-                        <i class="{% if post.id in user_liked_posts %}fas fa-heart{% else %}far fa-heart{% endif %}"></i>
-                        <span class="like-count">{{ post.likes }}</span>
-                    </a>
-                    
-                    <!-- Комментарии -->
-                    <button class="action-btn comment-toggle" onclick="toggleComments({{ post.id }})">
-                        <i class="fas fa-comment"></i>
-                        <span class="comment-count">{{ post.comments_list|length }}</span>
-                    </button>
-                    
-                    <!-- Шаринг -->
-                    <a href="{{ url_for('share_post', post_id=post.id) }}" class="action-btn">
-                        <i class="fas fa-share-alt"></i>
-                        Поделиться
-                    </a>
-                </div>
-                
-                <!-- Секция комментариев -->
-                <div class="comments-section" id="comments-{{ post.id }}" style="display: none;">
-                    <!-- Форма комментария -->
-                    <form method="POST" action="{{ url_for('create_comment', post_id=post.id) }}" class="comment-form">
-                        <input type="text" name="content" class="comment-input" placeholder="Написать комментарий..." required>
-                        <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
-                            <i class="fas fa-paper-plane"></i> Отправить
-                        </button>
-                    </form>
-                    
-                    <!-- Список комментариев -->
-                    <div class="comments-list">
-                        {% for comment in post.comments_list %}
-                        <div class="comment">
-                            <div class="comment-header">
-                                <span class="comment-user">{{ comment.user.username }}</span>
-                                <span class="comment-time">{{ comment.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                    <div class="profile-details">
+                        <h1>{{ user.first_name }} {{ user.last_name }}</h1>
+                        <p class="username">@{{ user.username }}</p>
+                        {% if user.bio %}
+                            <p class="bio">{{ user.bio }}</p>
+                        {% endif %}
+                        <div class="profile-stats">
+                            <div class="stat">
+                                <span class="stat-number">{{ posts|length }}</span>
+                                <span class="stat-label">постов</span>
                             </div>
-                            <div class="comment-content">{{ comment.content }}</div>
+                            <div class="stat">
+                                <span class="stat-number">{{ followers_count }}</span>
+                                <span class="stat-label">подписчиков</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="profile-actions">
+                    {% if user.id == session.user_id %}
+                        <!-- Редактирование профиля -->
+                        <a href="{{ url_for('edit_profile', username=user.username) }}" class="btn btn-primary">
+                            <i class="fas fa-edit"></i> Редактировать профиль
+                        </a>
+                    {% else %}
+                        <!-- Подписка/отписка -->
+                        <a href="{{ url_for('follow_user', username=user.username) }}" 
+                           class="btn {% if is_following %}btn-warning{% else %}btn-success{% endif %}">
+                            <i class="fas fa-{% if is_following %}user-minus{% else %}user-plus{% endif %}"></i>
+                            {% if is_following %}Отписаться{% else %}Подписаться{% endif %}
+                        </a>
+                        
+                        <!-- Кнопка сообщения -->
+                        <button class="btn btn-primary" onclick="showMessageForm()">
+                            <i class="fas fa-envelope"></i> Сообщение
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Посты пользователя -->
+        {% if posts %}
+            <div class="posts-container">
+                {% for post in posts %}
+                    {% if post.user %}
+                    <article class="post-card" data-post-id="{{ post.id }}">
+                        {% if post.original_post %}
+                        <div class="repost-indicator">
+                            <i class="fas fa-share-alt"></i>
+                            <em>Этот пост переслали. </em>
+                            <a href="{{ url_for('profile', username=post.original_post.user.username) }}" class="original-author-link">
+                                {{ post.original_post.user.first_name }} {{ post.original_post.user.last_name }}
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="post-header">
+                            <div class="post-user-info">
+                                <div class="post-avatar">
+                                    {% if post.user and post.user.username %}
+                                        {{ post.user.username[0].upper() }}
+                                    {% else %}
+                                        ?
+                                    {% endif %}
+                                </div>
+                                <div class="user-details">
+                                    <h4 class="user-name">
+                                        {% if post.user and post.user.username %}
+                                            <a href="{{ url_for('profile', username=post.user.username) }}">
+                                                {{ post.user.first_name }} {{ post.user.last_name }}
+                                            </a>
+                                        {% else %}
+                                            <span>Пользователь удален</span>
+                                        {% endif %}
+                                    </h4>
+                                    <div class="post-meta">
+                                        {% if post.user and post.user.username %}
+                                            <span class="username">@{{ post.user.username }}</span>
+                                        {% else %}
+                                            <span class="username">@deleted</span>
+                                        {% endif %}
+                                        <span class="post-time">
+                                            <i class="fas fa-clock"></i>
+                                            {{ post.created_at.strftime('%d.%m.%Y в %H:%M') }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="post-menu">
+                                <button class="menu-btn" title="Действия">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="post-content">
+                            <p>{{ post.content }}</p>
                             
-                            {% if comment.user_id == session.user_id %}
-                            <div style="margin-top: 0.5rem;">
-                                <a href="{{ url_for('delete_comment', comment_id=comment.id) }}" 
-                                   class="btn btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
-                                   onclick="return confirm('Удалить комментарий?')">
-                                    <i class="fas fa-trash"></i> Удалить
-                                </a>
+                            <!-- Отображение изображения -->
+                            {% if post.image %}
+                            <div class="post-image">
+                                <img src="{{ url_for('static', filename=post.image) }}" alt="Изображение в посте" class="post-image-content">
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Отображение эмодзи -->
+                            {% if post.emoji %}
+                            <div class="post-emoji">
+                                <span class="emoji-display">{{ post.emoji }}</span>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Отображение геолокации -->
+                            {% if post.location %}
+                            <div class="post-location">
+                                <div class="location-info">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>{{ post.location_name or post.location }}</span>
+                                </div>
+                                <div class="location-map" id="map-{{ post.id }}" data-lat="{{ post.location.split(',')[0] }}" data-lng="{{ post.location.split(',')[1] }}"></div>
                             </div>
                             {% endif %}
                         </div>
-                        {% endfor %}
+                        
+                        <div class="post-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-heart"></i>
+                                <span>{{ post.likes }}</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-comment"></i>
+                                <span>{{ post._comments_list|length }}</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-share"></i>
+                                <span>0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="post-actions">
+                            <button class="action-btn like-btn {% if post.id in user_liked_posts %}liked{% endif %}" 
+                                    data-post-id="{{ post.id }}" onclick="toggleLike({{ post.id }})">
+                                <i class="{% if post.id in user_liked_posts %}fas fa-heart{% else %}far fa-heart{% endif %}"></i>
+                                <span>Лайк</span>
+                            </button>
+                            
+                            <button class="action-btn comment-btn" onclick="toggleComments({{ post.id }})">
+                                <i class="fas fa-comment"></i>
+                                <span>Комментарий</span>
+                            </button>
+                            
+                            <button class="action-btn share-btn" onclick="sharePost({{ post.id }})">
+                                <i class="fas fa-share-alt"></i>
+                                <span>Поделиться</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Секция комментариев -->
+                        <div class="comments-section" id="comments-{{ post.id }}" style="display: none;">
+                            <div class="comments-header">
+                                <h4>Комментарии ({{ post._comments_list|length }})</h4>
+                            </div>
+                            
+                            <!-- Форма комментария -->
+                            <form method="POST" action="{{ url_for('create_comment', post_id=post.id) }}" class="comment-form">
+                                <div class="comment-input-wrapper">
+                                    <input type="text" name="content" class="comment-input" placeholder="Написать комментарий..." required>
+                                    <button type="submit" class="comment-submit">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </form>
+                            
+                            <!-- Список комментариев -->
+                            <div class="comments-list">
+                                {% for comment in post._comments_list %}
+                                    {% if comment.user %}
+                                    <div class="comment-item">
+                                        <div class="comment-avatar">
+                                            {{ comment.user.username[0].upper() }}
+                                        </div>
+                                        <div class="comment-content">
+                                            <div class="comment-header">
+                                                <a href="{{ url_for('profile', username=comment.user.username) }}" class="comment-author">
+                                                    {{ comment.user.first_name }} {{ comment.user.last_name }}
+                                                </a>
+                                                <span class="comment-time">{{ comment.created_at.strftime('%d.%m.%Y в %H:%M') }}</span>
+                                            </div>
+                                            <p class="comment-text">{{ comment.content }}</p>
+                                            {% if comment.user.id == session.user_id %}
+                                                <div class="comment-actions">
+                                                    <button class="comment-action-btn" onclick="deleteComment({{ comment.id }})">
+                                                        <i class="fas fa-trash"></i> Удалить
+                                                    </button>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </article>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-newspaper"></i>
+                </div>
+                <h3>Пока нет постов</h3>
+                <p>Этот пользователь еще не опубликовал ни одного поста</p>
+                {% if user.id == session.user_id %}
+                <div class="empty-actions">
+                    <a href="{{ url_for('feed') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Создать первый пост
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Правая колонка с рекламой -->
+    <div class="ads-column">
+        <div class="sticky-ads">
+            <!-- Google AdSense -->
+            <div class="ad-card">
+                <div class="ad-header">
+                    <i class="fas fa-ad"></i>
+                    <span>Реклама</span>
+                </div>
+                <div class="ad-content">
+                    <ins class="adsbygoogle"
+                         style="display:block"
+                         data-ad-client="ca-pub-1842490779540555"
+                         data-ad-slot=""
+                         data-ad-format="auto"
+                         data-full-width-responsive="true"></ins>
+                    <div class="ad-fallback">
+                        <h4>Кроссплатформенность</h4>
+                        <p>Линка доступна на всех устройствах</p>
                     </div>
                 </div>
             </div>
-            {% endif %}
-        {% endfor %}
-    {% else %}
-        <div class="card" style="text-align: center; padding: 3rem;">
-            <i class="fas fa-newspaper" style="font-size: 4rem; color: rgba(255,255,255,0.3); margin-bottom: 1rem;"></i>
-            <h3 style="color: rgba(255,255,255,0.7); margin-bottom: 1rem;">Пока нет постов</h3>
-            <p style="color: rgba(255,255,255,0.5);">
-                {% if user.id == session.user_id %}
-                    Создайте свой первый пост в ленте!
-                {% else %}
-                    У этого пользователя пока нет постов
-                {% endif %}
-            </p>
+
+            <!-- Вертикальный баннер -->
+            <div class="ad-card">
+                <div class="ad-header">
+                    <i class="fas fa-ad"></i>
+                    <span>Реклама</span>
+                </div>
+                <div class="ad-content">
+                    <ins class="adsbygoogle"
+                         style="display:block"
+                         data-ad-client="ca-pub-1842490779540555"
+                         data-ad-slot=""
+                         data-ad-format="vertical"></ins>
+                    <div class="ad-fallback">
+                        <h4>Без рекламы</h4>
+                        <p>Чистый интерфейс без навязчивых объявлений</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Квадратный баннер -->
+            <div class="ad-card">
+                <div class="ad-header">
+                    <i class="fas fa-ad"></i>
+                    <span>Реклама</span>
+                </div>
+                <div class="ad-content">
+                    <ins class="adsbygoogle"
+                         style="display:block"
+                         data-ad-client="ca-pub-1842490779540555"
+                         data-ad-slot=""
+                         data-ad-format="square"></ins>
+                    <div class="ad-fallback">
+                        <h4>Современный дизайн</h4>
+                        <p>Красивый и удобный интерфейс</p>
+                    </div>
+                </div>
+            </div>
         </div>
-    {% endif %}
+    </div>
 </div>
 
+<!-- JavaScript для интерактивности -->
 <script>
-    // Переключение комментариев
-    function toggleComments(postId) {
-        const commentsSection = document.getElementById(`comments-${postId}`);
-        const isVisible = commentsSection.style.display !== 'none';
-        
-        if (isVisible) {
-            commentsSection.style.display = 'none';
-        } else {
-            commentsSection.style.display = 'block';
+// Переключение лайков
+function toggleLike(postId) {
+    fetch(`/like/${postId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
         }
-    }
-    
-    // Показать форму сообщения
-    function showMessageForm() {
-        alert('Функция сообщений будет добавлена позже!');
-    }
-    
-    // Обновление статистики постов через AJAX
-    function updatePostStats() {
-        const posts = document.querySelectorAll('.post');
-        
-        posts.forEach(post => {
-            const postId = post.querySelector('.like-btn').dataset.postId;
-            const likeCount = post.querySelector('.like-count');
-            const commentCount = post.querySelector('.comment-count');
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const likeBtn = document.querySelector(`button[data-post-id="${postId}"]`);
+            const likeIcon = likeBtn.querySelector('i');
+            const likeCount = likeBtn.closest('.post-card').querySelector('.stat-item i.fa-heart').nextElementSibling;
             
-            fetch(`/api/post/${postId}/stats`)
-                .then(response => response.json())
-                .then(data => {
-                    if (likeCount) likeCount.textContent = data.likes_count;
-                    if (commentCount) commentCount.textContent = data.comments_count;
-                })
-                .catch(error => console.error('Ошибка обновления статистики:', error));
+            if (data.liked) {
+                likeBtn.classList.add('liked');
+                likeIcon.className = 'fas fa-heart';
+                likeCount.textContent = parseInt(likeCount.textContent) + 1;
+            } else {
+                likeBtn.classList.remove('liked');
+                likeIcon.className = 'far fa-heart';
+                likeCount.textContent = parseInt(likeCount.textContent) - 1;
+            }
+        }
+    });
+}
+
+// Переключение комментариев
+function toggleComments(postId) {
+    const commentsSection = document.getElementById(`comments-${postId}`);
+    commentsSection.style.display = commentsSection.style.display === 'none' ? 'block' : 'none';
+}
+
+// Удаление комментария
+function deleteComment(commentId) {
+    if (confirm('Удалить комментарий?')) {
+        fetch(`/comment/${commentId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
         });
     }
-    
-    // Обновляем статистику каждые 10 секунд
-    setInterval(updatePostStats, 10000);
-    
-    // Инициализация при загрузке страницы
-    document.addEventListener('DOMContentLoaded', function() {
-        updatePostStats();
+}
+
+// Поделиться постом
+function sharePost(postId) {
+    if (navigator.share) {
+        navigator.share({
+            title: 'Пост в Линка',
+            url: window.location.href
+        });
+    } else {
+        const url = window.location.href;
+        navigator.clipboard.writeText(url).then(() => {
+            alert('Ссылка скопирована в буфер обмена!');
+        });
+    }
+}
+
+// Показать форму сообщения
+function showMessageForm() {
+    alert('Функция сообщений будет добавлена позже!');
+}
+
+// Проверка загрузки рекламы
+function checkAdLoading() {
+    const adBlocks = document.querySelectorAll('.adsbygoogle');
+    adBlocks.forEach((block, index) => {
+        const fallback = block.parentElement.querySelector('.ad-fallback');
+        if (block.offsetHeight < 50 || block.innerHTML.trim() === '') {
+            if (fallback) fallback.style.display = 'block';
+        } else {
+            if (fallback) fallback.style.display = 'none';
+        }
     });
+}
+
+// Инициализация карт для постов с геолокацией
+document.addEventListener('DOMContentLoaded', function() {
+    {% for post in posts %}
+        {% if post.location %}
+            const map{{ post.id }} = L.map('map-{{ post.id }}').setView([0, 0], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map{{ post.id }});
+            
+            const coords = '{{ post.location }}'.split(',');
+            const lat = parseFloat(coords[0]);
+            const lng = parseFloat(coords[1]);
+            
+            if (!isNaN(lat) && !isNaN(lng)) {
+                map{{ post.id }}.setView([lat, lng], 13);
+                L.marker([lat, lng]).addTo(map{{ post.id }});
+            }
+        {% endif %}
+    {% endfor %}
+    
+    // Проверяем рекламу через 3 секунды
+    setTimeout(checkAdLoading, 3000);
+});
+
+// Периодическая проверка рекламы
+setInterval(checkAdLoading, 10000);
 </script>
 
+<!-- Leaflet CSS и JS для карт -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <style>
-    .profile-header {
-        background: linear-gradient(135deg, rgba(52, 152, 219, 0.2), rgba(46, 204, 113, 0.2));
-        border: 1px solid rgba(52, 152, 219, 0.3);
-        padding: 2rem;
+/* Основной макет */
+.feed-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* Левая колонка с постами */
+.posts-column {
+    min-width: 0;
+}
+
+/* Правая колонка с рекламой */
+.ads-column {
+    position: relative;
+}
+
+.sticky-ads {
+    position: sticky;
+    top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.sticky-ads::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sticky-ads::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+.sticky-ads::-webkit-scrollbar-thumb {
+    background: rgba(52, 152, 219, 0.5);
+    border-radius: 3px;
+}
+
+.sticky-ads::-webkit-scrollbar-thumb:hover {
+    background: rgba(52, 152, 219, 0.7);
+}
+
+.sticky-ads {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(52, 152, 219, 0.5) rgba(255, 255, 255, 0.05);
+}
+
+/* Профиль пользователя */
+.profile-header-section {
+    margin-bottom: 2rem;
+}
+
+.profile-header-card {
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.15), rgba(46, 204, 113, 0.15));
+    border: 1px solid rgba(52, 152, 219, 0.3);
+    border-radius: 20px;
+    padding: 2rem;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.profile-info {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.profile-avatar-large {
+    width: 120px;
+    height: 120px;
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    font-weight: bold;
+    color: white;
+    box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+    flex-shrink: 0;
+}
+
+.profile-details h1 {
+    color: #ffffff;
+    margin: 0 0 0.5rem 0;
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+.username {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1.2rem;
+    margin: 0 0 1rem 0;
+}
+
+.bio {
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0 0 1.5rem 0;
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.profile-stats {
+    display: flex;
+    gap: 2rem;
+}
+
+.stat {
+    text-align: center;
+}
+
+.stat-number {
+    display: block;
+    color: #3498db;
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.stat-label {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.profile-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 12px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, #3498db, #2980b9);
+    color: white;
+}
+
+.btn-success {
+    background: linear-gradient(45deg, #27ae60, #229954);
+    color: white;
+}
+
+.btn-warning {
+    background: linear-gradient(45deg, #f39c12, #e67e22);
+    color: white;
+}
+
+.btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Посты */
+.posts-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.post-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 2rem;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.post-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.repost-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: rgba(52, 152, 219, 0.1);
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.repost-indicator i {
+    color: #3498db;
+    font-size: 0.8rem;
+}
+
+.repost-indicator em {
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.original-author-link {
+    color: #3498db;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.post-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+}
+
+.post-user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.post-avatar {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(45deg, #f39c12, #e67e22);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: white;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.user-details h4 {
+    margin: 0 0 0.25rem 0;
+    color: #ffffff;
+    font-size: 1.1rem;
+}
+
+.user-details a {
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.post-meta {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.post-menu {
+    position: relative;
+}
+
+.menu-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    padding: 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.menu-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.post-content {
+    margin-bottom: 1.5rem;
+}
+
+.post-content p {
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.6;
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+}
+
+.post-image {
+    margin: 1rem 0;
+}
+
+.post-image-content {
+    max-width: 100%;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.post-emoji {
+    margin: 1rem 0;
+    text-align: center;
+}
+
+.emoji-display {
+    font-size: 4rem;
+    display: inline-block;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+.post-location {
+    margin: 1rem 0;
+}
+
+.location-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.location-map {
+    height: 200px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.post-stats {
+    display: flex;
+    gap: 2rem;
+    padding: 1rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 1.5rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+}
+
+.stat-item i {
+    color: #3498db;
+}
+
+.post-actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.action-btn {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.action-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
+.like-btn.liked {
+    background: rgba(231, 76, 60, 0.2);
+    border-color: rgba(231, 76, 60, 0.4);
+    color: #e74c3c;
+}
+
+.like-btn.liked:hover {
+    background: rgba(231, 76, 60, 0.3);
+}
+
+/* Комментарии */
+.comments-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.comments-header h4 {
+    color: #ffffff;
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.comment-form {
+    margin-bottom: 1.5rem;
+}
+
+.comment-input-wrapper {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.comment-input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.comment-input:focus {
+    outline: none;
+    border-color: #3498db;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.comment-submit {
+    background: #3498db;
+    border: none;
+    color: white;
+    padding: 0.75rem;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.comment-submit:hover {
+    background: #2980b9;
+    transform: translateY(-2px);
+}
+
+.comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.comment-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    border-left: 3px solid #3498db;
+}
+
+.comment-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #f39c12, #e67e22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: white;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.comment-content {
+    flex: 1;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.comment-author {
+    color: #3498db;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+}
+
+.comment-time {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.8rem;
+}
+
+.comment-text {
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0 0 0.75rem 0;
+    line-height: 1.5;
+}
+
+.comment-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.comment-action-btn {
+    background: none;
+    border: none;
+    color: #e74c3c;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.comment-action-btn:hover {
+    background: rgba(231, 76, 60, 0.1);
+}
+
+/* Пустое состояние */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: rgba(255, 255, 255, 0.3);
+    margin-bottom: 1.5rem;
+}
+
+.empty-state h3 {
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 1rem;
+    font-size: 1.8rem;
+}
+
+.empty-state p {
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+}
+
+.empty-actions .btn {
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Рекламные карточки */
+.ad-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 1rem;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.ad-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.ad-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #3498db;
+    font-weight: 600;
+}
+
+.ad-content {
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.adsbygoogle {
+    display: block;
+    text-align: center;
+    margin: 0 auto;
+}
+
+.ad-fallback {
+    text-align: center;
+    padding: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    display: none;
+}
+
+.ad-fallback h4 {
+    color: #3498db;
+    margin: 0 0 0.75rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.ad-fallback p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Адаптивность */
+@media (max-width: 1200px) {
+    .feed-layout {
+        grid-template-columns: 1fr 280px;
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 900px) {
+    .feed-layout {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .ads-column {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .feed-layout {
+        padding: 0 0.5rem;
+    }
+    
+    .profile-header-card {
+        padding: 1.5rem;
     }
     
     .profile-info {
-        display: flex;
-        gap: 2rem;
-        align-items: flex-start;
-        margin-bottom: 2rem;
-    }
-    
-    .profile-avatar {
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
-        background: linear-gradient(45deg, #3498db, #2ecc71);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        color: white;
-        font-size: 3rem;
-        flex-shrink: 0;
-        position: relative;
-    }
-    
-    .profile-avatar::after {
-        content: '';
-        position: absolute;
-        bottom: 8px;
-        right: 8px;
-        width: 20px;
-        height: 20px;
-        background: #2ecc71;
-        border: 3px solid #1a1a2e;
-        border-radius: 50%;
-    }
-    
-    .profile-details {
-        flex: 1;
-    }
-    
-    .profile-details h1 {
-        color: #ffffff;
-        margin-bottom: 0.5rem;
-        font-size: 2.5rem;
-    }
-    
-    .username {
-        color: #3498db;
-        font-size: 1.2rem;
-        margin-bottom: 1rem;
-        font-weight: 500;
-    }
-    
-    .bio {
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 1.1rem;
-        line-height: 1.6;
-        margin-bottom: 2rem;
-        max-width: 600px;
+        flex-direction: column;
+        text-align: center;
+        gap: 1.5rem;
     }
     
     .profile-stats {
-        display: flex;
-        gap: 3rem;
-    }
-    
-    .stat {
-        text-align: center;
-    }
-    
-    .stat-number {
-        display: block;
-        font-size: 2rem;
-        font-weight: bold;
-        color: #3498db;
-    }
-    
-    .stat-label {
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 0.9rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        justify-content: center;
     }
     
     .profile-actions {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
+        justify-content: center;
     }
     
-    .post {
-        position: relative;
-        overflow: hidden;
+    .post-card {
+        padding: 1.5rem;
     }
     
-    .post::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, #3498db, #2ecc71, #f39c12, #e74c3c);
-    }
-    
-    .post-avatar {
-        position: relative;
-    }
-    
-    .post-avatar::after {
-        content: '';
-        position: absolute;
-        bottom: 2px;
-        right: 2px;
-        width: 12px;
-        height: 12px;
-        background: #2ecc71;
-        border: 2px solid #1a1a2e;
-        border-radius: 50%;
+    .post-actions {
+        flex-direction: column;
     }
     
     .action-btn {
-        position: relative;
-        overflow: hidden;
+        justify-content: center;
     }
     
-    .action-btn::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 50%;
-        transform: translate(-50%, -50%);
-        transition: width 0.3s ease, height 0.3s ease;
+    .post-stats {
+        flex-direction: column;
+        gap: 1rem;
     }
-    
-    .action-btn:hover::before {
-        width: 100%;
-        height: 100%;
-    }
-    
-    .action-btn i {
-        position: relative;
-        z-index: 1;
-    }
-    
-    .comments-section {
-        background: rgba(0, 0, 0, 0.1);
-        border-radius: 12px;
-        margin-top: 1rem;
-        padding: 1rem;
-    }
-    
-    .comment {
-        border-left: 3px solid #3498db;
-        margin-left: 1rem;
-    }
-    
-    .comment-form {
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        padding-bottom: 1rem;
-        margin-bottom: 1rem;
-    }
-    
-    .comment-input {
-        font-family: inherit;
-    }
-    
-    /* Изображения в постах */
-    .post-image {
-        margin: 1rem 0;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    }
-    
-    .post-image-content {
-        width: 100%;
-        max-height: 400px;
-        object-fit: cover;
-        display: block;
-    }
-    
-    /* Эмодзи в постах */
-    .post-emoji {
-        margin: 1rem 0;
-        text-align: center;
-    }
-    
-    .emoji-display {
-        font-size: 3rem;
-        display: inline-block;
-        animation: emoji-bounce 0.6s ease-in-out;
-    }
-    
-    @keyframes emoji-bounce {
-        0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-        40% { transform: translateY(-10px); }
-        60% { transform: translateY(-5px); }
-    }
-    
-    /* Геолокация в постах */
-    .post-location {
-        margin: 1rem 0;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 12px;
-        padding: 1rem;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
-    .location-info {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-        color: #e74c3c;
-        font-weight: 500;
-    }
-    
-    .location-info i {
-        font-size: 1.2rem;
-    }
-    
-    .location-map {
-        width: 100%;
-        height: 200px;
-        border-radius: 8px;
-        background: #2c3e50;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .location-map::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 20px;
-        height: 20px;
-        background: #e74c3c;
-        border-radius: 50%;
-        border: 3px solid white;
-        box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
-        z-index: 2;
-    }
-    
-    .location-map::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 40px;
-        height: 40px;
-        background: rgba(231, 76, 60, 0.2);
-        border-radius: 50%;
-        animation: location-pulse 2s infinite;
-    }
-    
-    @keyframes location-pulse {
-        0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-        100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
-    }
-    
-    .btn-danger {
-        background: linear-gradient(45deg, #e74c3c, #c0392b);
-        border: none;
-        color: white;
-        transition: all 0.3s ease;
-    }
-    
-    .btn-danger:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
-    }
-    
-    /* Адаптивность */
-    @media (max-width: 768px) {
-        .profile-info {
-            flex-direction: column;
-            text-align: center;
-        }
-        
-        .profile-stats {
-            justify-content: center;
-        }
-        
-        .profile-actions {
-            justify-content: center;
-        }
-        
-        .profile-details h1 {
-            font-size: 2rem;
-        }
-        
-        .profile-avatar {
-            width: 100px;
-            height: 100px;
-            font-size: 2.5rem;
-        }
-    }
-    
-    /* Ограничение ширины профиля */
-    .profile-container {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 0 1rem;
-    }
-    
-    @media (max-width: 900px) {
-        .profile-container {
-            max-width: 100%;
-            padding: 0 1rem;
-        }
-    }
-    
-    @media (max-width: 768px) {
-        .profile-container {
-            padding: 0 0.5rem;
-        }
-    }
+}
 </style>
 {% endblock %}

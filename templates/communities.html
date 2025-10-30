@@ -1,0 +1,1978 @@
+{% extends "base.html" %}
+
+{% block title %}Сообщества - Линка{% endblock %}
+
+{% block content %}
+<div class="communities-layout">
+    <!-- Заголовок и кнопка создания -->
+    <div class="communities-header">
+        <div class="header-content">
+            <h1><i class="fas fa-users"></i> Сообщества</h1>
+            <p>Присоединяйтесь к сообществам по интересам или создавайте свои</p>
+        </div>
+        <button onclick="showCreateCommunityPopup()" class="btn btn-primary create-community-btn">
+            <i class="fas fa-plus"></i> Создать сообщество
+        </button>
+    </div>
+
+    <!-- Список сообществ -->
+    <div class="communities-grid">
+        {% if communities %}
+            {% for community in communities %}
+            <div class="community-card">
+                <!-- Обложка сообщества -->
+                <div class="community-cover">
+                    {% if community.cover_image %}
+                        <img src="{{ url_for('static', filename=community.cover_image) }}" alt="Обложка {{ community.name }}">
+                    {% else %}
+                        <div class="default-cover">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Статус приватности -->
+                    {% if community.is_private %}
+                        <div class="privacy-badge private">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                    {% else %}
+                        <div class="privacy-badge public">
+                            <i class="fas fa-globe"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Информация о сообществе -->
+                <div class="community-info">
+                    <div class="community-avatar">
+                        {% if community.avatar %}
+                            <img src="{{ url_for('static', filename=community.avatar) }}" alt="Аватар {{ community.name }}">
+                        {% else %}
+                            <div class="default-avatar">
+                                {{ community.name[0].upper() }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="community-details">
+                        <h3 class="community-name">
+                            <a href="{{ url_for('community', community_id=community.id) }}">
+                                {{ community.name }}
+                            </a>
+                        </h3>
+                        
+                        {% if community.description %}
+                            <p class="community-description">{{ community.description[:100] }}{% if community.description|length > 100 %}...{% endif %}</p>
+                        {% endif %}
+                        
+                        {% if community.category %}
+                            <span class="community-category">{{ community.category }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Статистика сообщества -->
+                <div class="community-stats">
+                    <div class="stat">
+                        <i class="fas fa-users"></i>
+                        <span>{{ community.member_count() }} участников</span>
+                    </div>
+                    <div class="stat">
+                        <i class="fas fa-newspaper"></i>
+                        <span>{{ community.post_count() }} постов</span>
+                    </div>
+                </div>
+                
+                <!-- Действия -->
+                <div class="community-actions">
+                    {% if community.creator_id == user_id %}
+                        <span class="creator-badge">
+                            <i class="fas fa-crown"></i> Создатель
+                        </span>
+                    {% else %}
+                        {% set is_member = false %}
+                        {% for member in community.members %}
+                            {% if member.user_id == user_id %}
+                                {% set is_member = true %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if is_member %}
+                            <a href="{{ url_for('community', community_id=community.id) }}" class="btn btn-secondary">
+                                <i class="fas fa-eye"></i> Просмотр
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('join_community', community_id=community.id) }}" class="btn btn-success">
+                                <i class="fas fa-user-plus"></i> Присоединиться
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>Пока нет сообществ</h3>
+                <p>Будьте первым, кто создаст сообщество по интересующей вас теме!</p>
+                <button onclick="showCreateCommunityPopup()" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Создать сообщество
+                </button>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Поп-ап создания сообщества -->
+<div id="create-community-popup" class="popup-overlay" style="display: none;">
+    <div class="popup-content">
+        <!-- Этап 1: Выбор цели -->
+        <div id="step-1" class="popup-step">
+            <div class="popup-header">
+                <h2>Какая у вас цель?</h2>
+                <button class="close-btn" onclick="closeCreateCommunityPopup()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="goal-selection">
+                <div class="goal-option" onclick="selectGoal('content')">
+                    <div class="goal-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="goal-content">
+                        <h3>Делиться контентом и общаться</h3>
+                        <p>Создайте сообщество для общения, обмена мнениями и интересным контентом</p>
+                    </div>
+                    <div class="goal-arrow">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+                
+                <div class="goal-option" onclick="selectGoal('business')">
+                    <div class="goal-icon">
+                        <i class="fas fa-briefcase"></i>
+                    </div>
+                    <div class="goal-content">
+                        <h3>Развивать бизнес</h3>
+                        <p>Создайте сообщество для продвижения вашего бизнеса и привлечения клиентов</p>
+                    </div>
+                    <div class="goal-arrow">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Этап 2A: Делиться контентом -->
+        <div id="step-2a" class="popup-step" style="display: none;">
+            <div class="popup-header">
+                <button class="back-btn" onclick="goBackToStep1()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2>Создайте сообщество для вашего блога</h2>
+                <button class="close-btn" onclick="closeCreateCommunityPopup()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="content-creation-form">
+                <div class="form-group">
+                    <label for="content-avatar">Загрузить аватар</label>
+                    <div class="file-upload-area" onclick="document.getElementById('content-avatar').click()">
+                        <i class="fas fa-camera"></i>
+                        <p id="avatar-text">Нажмите для выбора аватара</p>
+                    </div>
+                    <input type="file" id="content-avatar" name="avatar" accept="image/*" style="display: none;">
+                    <div id="avatar-preview" class="avatar-preview" style="display: none;">
+                        <span id="avatar-filename"></span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="content-name">Название сообщества *</label>
+                    <input type="text" id="content-name" name="name" required 
+                           placeholder="Введите название сообщества"
+                           maxlength="100">
+                    
+                </div>
+                
+                <div class="form-group">
+                    <label for="content-privacy">Приватность сообщества</label>
+                    <div class="privacy-options">
+                        <label class="privacy-option">
+                            <input type="radio" name="content-privacy" value="public" checked>
+                            <span class="radio-custom"></span>
+                            <div class="privacy-info">
+                                <strong>Публичное</strong>
+                                <small>Видно всем пользователям</small>
+                            </div>
+                        </label>
+                        <label class="privacy-option">
+                            <input type="radio" name="content-privacy" value="private">
+                            <span class="radio-custom"></span>
+                            <div class="privacy-info">
+                                <strong>Приватное</strong>
+                                <small>Видно только участникам</small>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" onclick="goBackToStep1()" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Назад
+                    </button>
+                    <button type="button" onclick="goToContentStep3()" class="btn btn-primary">
+                        Продолжить <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Этап 2B: Развивать бизнес -->
+        <div id="step-2b" class="popup-step" style="display: none;">
+            <div class="popup-header">
+                <button class="back-btn" onclick="goBackToStep1()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2>Создайте сообщество для вашего бизнеса</h2>
+                <button class="close-btn" onclick="closeCreateCommunityPopup()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="business-creation-layout">
+                <div class="business-benefits">
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="benefit-text">
+                            <strong>Получите новых клиентов</strong>
+                            <p>с помощью огромной аудитории</p>
+                        </div>
+                    </div>
+                    
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="benefit-text">
+                            <strong>Общайтесь с клиентами</strong>
+                            <p>через мессенджер</p>
+                        </div>
+                    </div>
+                    
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <i class="fas fa-store"></i>
+                        </div>
+                        <div class="benefit-text">
+                            <strong>Публикуйте товары и услуги</strong>
+                            <p>в сообществе и продавайте их</p>
+                        </div>
+                    </div>
+                    
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <i class="fas fa-globe"></i>
+                        </div>
+                        <div class="benefit-text">
+                            <strong>Получите присутствие в интернете</strong>
+                            <p>вашей компании</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="business-form">
+                    <div class="form-group">
+                        <label for="business-name">Название *</label>
+                        <input type="text" id="business-name" name="name" required 
+                               placeholder="Введите название сообщества"
+                               maxlength="100">
+                        <div class="input-tips" id="business-name-tips" style="display: none;">
+                            <div class="example-comparison">
+                                <div class="example-correct">
+                                    <span class="example-label">✅ ПРАВИЛЬНО:</span>
+                                    <span class="example-text">"Стартап Хаб"</span>
+                                </div>
+                                <div class="example-incorrect">
+                                    <span class="example-label">❌ НЕПРАВИЛЬНО:</span>
+                                    <span class="example-text">"Сообщество для обсуждения стартапов и технологических инноваций в сфере IT"</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="business-theme">Тематика *</label>
+                        <select id="business-theme" name="theme" required>
+                            <option value="">Выберите тематику</option>
+                            <option value="Бизнес">💼 Бизнес</option>
+                            <option value="Торговля">🛍️ Торговля</option>
+                            <option value="Услуги">🔧 Услуги</option>
+                            <option value="Образование">📚 Образование</option>
+                            <option value="Здоровье">🏥 Здоровье</option>
+                            <option value="Красота">💄 Красота</option>
+                            <option value="Спорт">⚽ Спорт</option>
+                            <option value="Другое">🔧 Другое</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="business-description">Описание</label>
+                        <textarea id="business-description" name="description" rows="4" 
+                                  placeholder="Расскажите о вашем бизнесе, товарах или услугах"></textarea>
+                        <div class="input-tips" id="business-desc-tips" style="display: none;">
+                            <div class="example-comparison">
+                                <div class="example-correct">
+                                    <span class="example-label">✅ ПРАВИЛЬНО:</span>
+                                    <span class="example-text">"Мы создаем будущее бизнеса через инновации и технологии"</span>
+                                </div>
+                                <div class="example-incorrect">
+                                    <span class="example-label">❌ НЕПРАВИЛЬНО:</span>
+                                    <span class="example-text">"Мы компания которая занимается разработкой программного обеспечения для бизнеса и предлагаем различные услуги по автоматизации процессов"</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="char-counter">
+                            <span id="business-char-count">0</span> / 4000
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" onclick="goBackToStep1()" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Назад
+                        </button>
+                        <button type="button" onclick="createBusinessCommunity()" class="btn btn-primary">
+                            Создать сообщество
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Этап 3: Выбор тематики для контента -->
+        <div id="step-3" class="popup-step" style="display: none;">
+            <div class="popup-header">
+                <button class="back-btn" onclick="goBackToContentStep2()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2>Выберите тематику</h2>
+                <button class="close-btn" onclick="closeCreateCommunityPopup()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="theme-selection">
+                <div class="theme-grid">
+                    <div class="theme-option" data-theme="Технологии">
+                        <div class="theme-icon">💻</div>
+                        <span>Технологии</span>
+                    </div>
+                    <div class="theme-option" data-theme="Развлечения">
+                        <div class="theme-icon">🎮</div>
+                        <span>Развлечения</span>
+                    </div>
+                    <div class="theme-option" data-theme="Спорт">
+                        <div class="theme-icon">⚽</div>
+                        <span>Спорт</span>
+                    </div>
+                    <div class="theme-option" data-theme="Музыка">
+                        <div class="theme-icon">🎵</div>
+                        <span>Музыка</span>
+                    </div>
+                    <div class="theme-option" data-theme="Кино">
+                        <div class="theme-icon">🎬</div>
+                        <span>Кино</span>
+                    </div>
+                    <div class="theme-option" data-theme="Кулинария">
+                        <div class="theme-icon">🍳</div>
+                        <span>Кулинария</span>
+                    </div>
+                    <div class="theme-option" data-theme="Путешествия">
+                        <div class="theme-icon">✈️</div>
+                        <span>Путешествия</span>
+                    </div>
+                    <div class="theme-option" data-theme="Мода">
+                        <div class="theme-icon">👗</div>
+                        <span>Мода</span>
+                    </div>
+                    <div class="theme-option" data-theme="Авто">
+                        <div class="theme-icon">🚗</div>
+                        <span>Авто</span>
+                    </div>
+                    <div class="theme-option" data-theme="Образование">
+                        <div class="theme-icon">📚</div>
+                        <span>Образование</span>
+                    </div>
+                    <div class="theme-option" data-theme="Здоровье">
+                        <div class="theme-icon">🏥</div>
+                        <span>Здоровье</span>
+                    </div>
+                    <div class="theme-option" data-theme="Хобби">
+                        <div class="theme-icon">🎨</div>
+                        <span>Хобби</span>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" onclick="goBackToContentStep2()" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Назад
+                    </button>
+                    <button type="button" onclick="createContentCommunity()" class="btn btn-primary">
+                        Создать сообщество
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+
+    </div>
+</div>
+
+<script>
+    let currentStep = 1;
+    let selectedGoal = null;
+    let selectedTheme = null;
+    let communityData = {};
+    
+    // Показать поп-ап создания сообщества
+    function showCreateCommunityPopup() {
+        document.getElementById('create-community-popup').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        showStep(1);
+    }
+    
+    // Закрыть поп-ап создания сообщества
+    function closeCreateCommunityPopup() {
+        document.getElementById('create-community-popup').style.display = 'none';
+        document.body.style.overflow = 'auto';
+        resetPopupForm();
+        currentStep = 1;
+        selectedGoal = null;
+        selectedTheme = null;
+        communityData = {};
+    }
+    
+    // Показать определенный этап
+    function showStep(stepNumber) {
+        // Скрываем все этапы
+        document.querySelectorAll('.popup-step').forEach(step => {
+            step.style.display = 'none';
+        });
+        
+        // Показываем нужный этап
+        document.getElementById(`step-${stepNumber}`).style.display = 'block';
+        currentStep = stepNumber;
+    }
+    
+    // Выбор цели
+    function selectGoal(goal) {
+        selectedGoal = goal;
+        if (goal === 'content') {
+            showStep('2a');
+        } else if (goal === 'business') {
+            showStep('2b');
+        }
+    }
+    
+    // Вернуться к первому этапу
+    function goBackToStep1() {
+        showStep(1);
+    }
+    
+    // Вернуться ко второму этапу для контента
+    function goBackToContentStep2() {
+        showStep('2a');
+    }
+    
+    // Перейти к третьему этапу для контента
+    function goToContentStep3() {
+        // Собираем данные из второго этапа
+        const name = document.getElementById('content-name').value;
+        const privacy = document.querySelector('input[name="content-privacy"]:checked').value;
+        const avatar = document.getElementById('content-avatar').files[0];
+        
+        if (!name.trim()) {
+            showNotification('Введите название сообщества', 'error');
+            return;
+        }
+        
+        communityData.name = name;
+        communityData.is_private = privacy === 'private';
+        communityData.avatar = avatar;
+        
+        showStep(3);
+    }
+    
+    // Создать сообщество для контента
+    function createContentCommunity() {
+        if (!selectedTheme) {
+            showNotification('Выберите тематику', 'error');
+            return;
+        }
+        
+        communityData.category = selectedTheme;
+        communityData.description = 'Сообщество для общения и обмена контентом';
+        
+        // Отправляем данные на сервер
+        createCommunity();
+    }
+    
+    // Создать сообщество для бизнеса
+    function createBusinessCommunity() {
+        const name = document.getElementById('business-name').value;
+        const theme = document.getElementById('business-theme').value;
+        const description = document.getElementById('business-description').value;
+        
+        if (!name.trim() || !theme) {
+            showNotification('Заполните обязательные поля', 'error');
+            return;
+        }
+        
+        communityData.name = name;
+        communityData.category = theme;
+        communityData.description = description;
+        communityData.is_private = false;
+        
+        // Отправляем данные на сервер
+        createCommunity();
+    }
+    
+    // Отправка данных на сервер
+    function createCommunity() {
+        const formData = new FormData();
+        
+        // Добавляем все данные
+        Object.keys(communityData).forEach(key => {
+            if (communityData[key] !== null && communityData[key] !== undefined) {
+                if (key === 'avatar' && communityData[key] instanceof File) {
+                    formData.append(key, communityData[key]);
+                } else {
+                    formData.append(key, communityData[key]);
+                }
+            }
+        });
+        
+        fetch('{{ url_for("create_community") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Сразу переходим к созданному сообществу
+                closeCreateCommunityPopup();
+                window.location.href = `/community/${data.community_id}`;
+            } else {
+                showNotification(data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Произошла ошибка при создании сообщества', 'error');
+        });
+    }
+    
+
+    
+         // Сбросить форму поп-апа
+     function resetPopupForm() {
+         // Сбрасываем все поля
+         document.getElementById('content-name').value = '';
+         document.getElementById('business-name').value = '';
+         document.getElementById('business-theme').value = '';
+         document.getElementById('business-description').value = '';
+         document.getElementById('content-avatar').value = '';
+         
+         // Скрываем советы
+         document.getElementById('business-name-tips').style.display = 'none';
+         document.getElementById('business-desc-tips').style.display = 'none';
+         
+         // Сбрасываем счетчик символов
+         document.getElementById('business-char-count').textContent = '0';
+         
+         // Сбрасываем выбранную тематику
+         selectedTheme = null;
+         document.querySelectorAll('.theme-option').forEach(option => {
+             option.classList.remove('selected');
+         });
+     }
+    
+    // Выбор тематики
+    document.addEventListener('DOMContentLoaded', function() {
+        // Обработчик выбора тематики
+        document.querySelectorAll('.theme-option').forEach(option => {
+            option.addEventListener('click', function() {
+                // Убираем выделение со всех опций
+                document.querySelectorAll('.theme-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                
+                // Выделяем выбранную опцию
+                this.classList.add('selected');
+                selectedTheme = this.dataset.theme;
+            });
+        });
+        
+                 // Счетчик символов для описания бизнеса
+         document.getElementById('business-description').addEventListener('input', function() {
+             const count = this.value.length;
+             document.getElementById('business-char-count').textContent = count;
+             
+             // Показываем/скрываем советы для описания
+             const tips = document.getElementById('business-desc-tips');
+             if (count > 0) {
+                 tips.style.display = 'block';
+             } else {
+                 tips.style.display = 'none';
+             }
+         });
+         
+                 // Показываем/скрываем советы для названия
+        document.getElementById('business-name').addEventListener('input', function() {
+            const tips = document.getElementById('business-name-tips');
+            if (this.value.length > 0) {
+                tips.style.display = 'block';
+            } else {
+                tips.style.display = 'none';
+            }
+        });
+        
+        // Скрываем советы для названия при потере фокуса
+        document.getElementById('business-name').addEventListener('blur', function() {
+            const tips = document.getElementById('business-name-tips');
+            tips.style.display = 'none';
+        });
+        
+        // Показываем советы для названия при получении фокуса (если есть текст)
+        document.getElementById('business-name').addEventListener('focus', function() {
+            const tips = document.getElementById('business-name-tips');
+            if (this.value.length > 0) {
+                tips.style.display = 'block';
+            }
+        });
+        
+        // Показываем/скрываем советы для описания
+        document.getElementById('business-description').addEventListener('input', function() {
+            const tips = document.getElementById('business-desc-tips');
+            const charCount = document.getElementById('business-char-count');
+            
+            // Показываем/скрываем подсказки
+            if (this.value.length > 0) {
+                tips.style.display = 'block';
+            } else {
+                tips.style.display = 'none';
+            }
+            
+            // Обновляем счетчик символов
+            charCount.textContent = this.value.length;
+        });
+        
+        // Скрываем советы для описания при потере фокуса
+        document.getElementById('business-description').addEventListener('blur', function() {
+            const tips = document.getElementById('business-desc-tips');
+            tips.style.display = 'none';
+        });
+        
+        // Показываем советы для описания при получении фокуса (если есть текст)
+        document.getElementById('business-description').addEventListener('focus', function() {
+            const tips = document.getElementById('business-desc-tips');
+            if (this.value.length > 0) {
+                tips.style.display = 'block';
+            }
+        });
+        
+        // Обработчик загрузки аватара для контента
+        document.getElementById('content-avatar').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Показываем информацию о выбранном файле
+                const avatarText = document.getElementById('avatar-text');
+                const avatarPreview = document.getElementById('avatar-preview');
+                const avatarFilename = document.getElementById('avatar-filename');
+                
+                // Обновляем текст
+                avatarText.textContent = 'Файл выбран ✓';
+                
+                // Показываем название файла
+                avatarFilename.textContent = file.name;
+                avatarPreview.style.display = 'block';
+                
+                console.log('Аватар загружен:', file.name);
+            }
+        });
+    });
+    
+    // Функция показа уведомлений
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+            <span>${message}</span>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Показываем уведомление
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 100);
+        
+        // Скрываем уведомление через 3 секунды
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 3000);
+    }
+    
+    // Закрытие поп-апа по клику вне его
+    document.getElementById('create-community-popup').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeCreateCommunityPopup();
+        }
+    });
+</script>
+
+<style>
+    .communities-layout {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+    
+    .communities-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 3rem;
+        background: linear-gradient(135deg, rgba(52, 152, 219, 0.15), rgba(46, 204, 113, 0.15));
+        border: 1px solid rgba(52, 152, 219, 0.3);
+        border-radius: 20px;
+        padding: 2rem;
+        backdrop-filter: blur(10px);
+    }
+    
+    .header-content h1 {
+        color: #ffffff;
+        margin: 0 0 0.5rem 0;
+        font-size: 2.5rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .header-content p {
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0;
+        font-size: 1.1rem;
+    }
+    
+    .create-community-btn {
+        background: linear-gradient(45deg, #e74c3c, #c0392b);
+        border: none;
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+    }
+    
+    .create-community-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
+        color: white;
+    }
+    
+    .communities-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2rem;
+    }
+    
+    .community-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+    
+    .community-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+    }
+    
+    .community-cover {
+        position: relative;
+        height: 150px;
+        overflow: hidden;
+    }
+    
+    .community-cover img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .default-cover {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 3rem;
+    }
+    
+    .privacy-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.5rem;
+        border-radius: 50%;
+        color: white;
+        font-size: 0.9rem;
+    }
+    
+    .privacy-badge.private {
+        background: rgba(231, 76, 60, 0.9);
+    }
+    
+    .privacy-badge.public {
+        background: rgba(46, 204, 113, 0.9);
+    }
+    
+    .community-info {
+        padding: 1.5rem;
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .community-avatar {
+        flex-shrink: 0;
+    }
+    
+    .community-avatar img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    
+    .default-avatar {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(45deg, #f39c12, #e67e22);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+        font-size: 1.5rem;
+    }
+    
+    .community-details {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .community-name {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.3rem;
+        font-weight: 600;
+    }
+    
+    .community-name a {
+        color: #ffffff;
+        text-decoration: none;
+    }
+    
+    .community-name a:hover {
+        color: #3498db;
+    }
+    
+    .community-description {
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0 0 0.75rem 0;
+        line-height: 1.5;
+        font-size: 0.95rem;
+    }
+    
+    .community-category {
+        display: inline-block;
+        background: rgba(52, 152, 219, 0.2);
+        color: #3498db;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .community-stats {
+        padding: 0 1.5rem 1rem;
+        display: flex;
+        gap: 2rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .stat {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+    }
+    
+    .stat i {
+        color: #3498db;
+        font-size: 0.8rem;
+    }
+    
+    .community-actions {
+        padding: 1.5rem;
+        display: flex;
+        justify-content: center;
+    }
+    
+    .creator-badge {
+        background: linear-gradient(45deg, #f39c12, #e67e22);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 12px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        transform: translateY(-2px);
+    }
+    
+    .btn-success {
+        background: linear-gradient(45deg, #27ae60, #229954);
+        color: white;
+    }
+    
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(39, 174, 96, 0.3);
+    }
+    
+    .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 4rem 2rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .empty-icon {
+        font-size: 4rem;
+        color: rgba(255, 255, 255, 0.3);
+        margin-bottom: 1.5rem;
+    }
+    
+    .empty-state h3 {
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 1rem;
+        font-size: 1.8rem;
+    }
+    
+    .empty-state p {
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 2rem;
+        font-size: 1.1rem;
+    }
+    
+    /* Адаптивность */
+    @media (max-width: 768px) {
+        .communities-header {
+            flex-direction: column;
+            gap: 1.5rem;
+            text-align: center;
+        }
+        
+        .communities-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        .community-stats {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        /* Адаптивность для поп-апа */
+        .popup-content {
+            width: 98%;
+            max-height: 95vh;
+            margin: 0.5rem;
+        }
+        
+        .business-creation-layout {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            padding: 1.5rem;
+        }
+        
+        .business-form {
+            min-height: auto;
+            padding: 1rem;
+        }
+        
+        .input-tips li {
+            font-size: 0.8rem;
+            padding: 0.4rem;
+        }
+        
+        .example-comparison {
+            gap: 0.75rem;
+        }
+        
+        .example-correct,
+        .example-incorrect {
+            padding: 0.75rem;
+        }
+        
+        .example-text {
+            font-size: 0.85rem;
+        }
+        
+        .goal-option {
+            flex-direction: column;
+            text-align: center;
+            gap: 1rem;
+        }
+        
+        .goal-icon {
+            width: 80px;
+            height: 80px;
+            font-size: 2rem;
+        }
+        
+        .theme-grid {
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        }
+        
+        .popup-header {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+        
+        .popup-header h2 {
+            font-size: 1.5rem;
+        }
+    }
+    
+    /* Стили для поп-апа */
+    .popup-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        backdrop-filter: blur(10px);
+    }
+    
+    /* Стили для этапов */
+    .popup-step {
+        width: 100%;
+    }
+    
+    /* Кнопка назад */
+    .back-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.8);
+        padding: 0.5rem;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+    
+    .back-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        transform: scale(1.1);
+    }
+    
+    /* Выбор цели */
+    .goal-selection {
+        padding: 2rem;
+    }
+    
+    .goal-option {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        padding: 1.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .goal-option:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: #3498db;
+        transform: translateY(-2px);
+    }
+    
+    .goal-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(45deg, #3498db, #2980b9);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+        flex-shrink: 0;
+    }
+    
+    .goal-content {
+        flex: 1;
+    }
+    
+    .goal-content h3 {
+        color: #ffffff;
+        margin: 0 0 0.5rem 0;
+        font-size: 1.3rem;
+        font-weight: 600;
+    }
+    
+    .goal-content p {
+        color: rgba(255, 255, 255, 0.7);
+        margin: 0;
+        line-height: 1.5;
+    }
+    
+    .goal-arrow {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 1.2rem;
+    }
+    
+    /* Форма для контента */
+    .content-creation-form {
+        padding: 2rem;
+    }
+    
+    /* Приватность */
+    .privacy-options {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .privacy-option {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .privacy-option:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: #3498db;
+    }
+    
+    .privacy-option input[type="radio"] {
+        display: none;
+    }
+    
+    .radio-custom {
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+    
+    .privacy-option input[type="radio"]:checked + .radio-custom {
+        border-color: #3498db;
+    }
+    
+    .privacy-option input[type="radio"]:checked + .radio-custom::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 10px;
+        height: 10px;
+        background: #3498db;
+        border-radius: 50%;
+    }
+    
+    .privacy-info strong {
+        color: #ffffff;
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+    
+    .privacy-info small {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.9rem;
+    }
+    
+    /* Бизнес создание */
+    .business-creation-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 3rem;
+        padding: 3rem;
+        min-height: 600px;
+    }
+    
+    .business-benefits {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .benefit-item {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        padding: 1.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .benefit-item:hover {
+        background: rgba(255, 255, 255, 0.08);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+    
+    .benefit-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(45deg, #3498db, #2980b9);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+        flex-shrink: 0;
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    }
+    
+    .benefit-text strong {
+        color: #ffffff;
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+    
+    .benefit-text p {
+        color: rgba(255, 255, 255, 0.7);
+        margin: 0;
+        font-size: 1rem;
+        line-height: 1.4;
+    }
+    
+    .business-form {
+        padding: 1.5rem;
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        min-height: 500px;
+    }
+    
+    /* Примеры по вводу */
+    .input-tips {
+        margin-top: 0.75rem;
+        padding: 1rem;
+        background: rgba(52, 152, 219, 0.15);
+        border: 1px solid rgba(52, 152, 219, 0.3);
+        border-radius: 12px;
+        position: relative;
+        z-index: 10;
+    }
+    
+    .input-tips p {
+        color: rgba(255, 255, 255, 0.9);
+        margin: 0 0 0.75rem 0;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        font-weight: 600;
+    }
+    
+    .input-tips strong {
+        color: #3498db;
+    }
+    
+    .input-tips ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    
+    .input-tips li {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.85rem;
+        line-height: 1.5;
+        margin-bottom: 0.5rem;
+        padding: 0.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        border-left: 3px solid #3498db;
+        transition: all 0.3s ease;
+    }
+    
+    .input-tips li:hover {
+        background: rgba(255, 255, 255, 0.08);
+        transform: translateX(5px);
+    }
+    
+    .input-tips li:last-child {
+        margin-bottom: 0;
+    }
+    
+    /* Сравнение примеров */
+    .example-comparison {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-top: 0;
+    }
+    
+    .example-correct,
+    .example-incorrect {
+        padding: 1rem;
+        border-radius: 12px;
+        border-left: 4px solid;
+        transition: all 0.3s ease;
+    }
+    
+    .example-correct {
+        background: rgba(46, 204, 113, 0.1);
+        border-left-color: #27ae60;
+    }
+    
+    .example-incorrect {
+        background: rgba(231, 76, 60, 0.1);
+        border-left-color: #e74c3c;
+    }
+    
+    .example-label {
+        display: block;
+        font-weight: 700;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .example-correct .example-label {
+        color: #27ae60;
+    }
+    
+    .example-incorrect .example-label {
+        color: #e74c3c;
+    }
+    
+    .example-text {
+        display: block;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.95rem;
+        line-height: 1.4;
+        font-style: italic;
+    }
+    
+    .example-correct:hover,
+    .example-incorrect:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* Счетчик символов */
+    .char-counter {
+        text-align: right;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+    }
+    
+    /* Выбор тематики */
+    .theme-selection {
+        padding: 2rem;
+    }
+    
+    .theme-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .theme-option {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+    
+    .theme-option:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: #3498db;
+        transform: translateY(-2px);
+    }
+    
+    .theme-option.selected {
+        background: rgba(52, 152, 219, 0.2);
+        border-color: #3498db;
+        box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
+    }
+    
+    .theme-icon {
+        font-size: 2rem;
+    }
+    
+    .theme-option span {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    /* Поздравление */
+    .success-message {
+        text-align: center;
+        padding: 2rem;
+    }
+    
+    .success-icon {
+        font-size: 4rem;
+        color: #27ae60;
+        margin-bottom: 1.5rem;
+    }
+    
+    .success-message h3 {
+        color: #ffffff;
+        margin: 0 0 1rem 0;
+        font-size: 1.8rem;
+        font-weight: 600;
+    }
+    
+    .success-message p {
+        color: rgba(255, 255, 255, 0.7);
+        margin: 0 0 2rem 0;
+        font-size: 1.1rem;
+        line-height: 1.5;
+    }
+    
+    /* Уведомления */
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #2c3e50;
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        z-index: 2000;
+        transform: translateX(400px);
+        transition: transform 0.3s ease;
+        max-width: 350px;
+    }
+    
+    .notification.show {
+        transform: translateX(0);
+    }
+    
+    .notification.success {
+        border-left: 4px solid #27ae60;
+    }
+    
+    .notification.error {
+        border-left: 4px solid #e74c3c;
+    }
+    
+    .notification i {
+        font-size: 1.2rem;
+    }
+    
+    .notification.success i {
+        color: #27ae60;
+    }
+    
+    .notification.error i {
+        color: #e74c3c;
+    }
+    
+    .popup-content {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 0;
+        max-width: 900px;
+        width: 95%;
+        max-height: 95vh;
+        overflow-y: auto;
+        backdrop-filter: blur(20px);
+        position: relative;
+    }
+    
+    .popup-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 20px 20px 0 0;
+    }
+    
+    .popup-header h2 {
+        color: #ffffff;
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .close-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.8);
+        padding: 0.5rem;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+    
+    .close-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        transform: scale(1.1);
+    }
+    
+    .popup-content form {
+        padding: 2rem;
+    }
+    
+    .popup-content .form-section {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .popup-content .form-section h3 {
+        color: #3498db;
+        margin: 0 0 1.5rem 0;
+        font-size: 1.2rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .popup-content .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .popup-content .form-group label {
+        display: block;
+        color: #ffffff;
+        font-size: 1rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #3498db;
+    }
+    
+    .popup-content .form-group input[type="text"],
+    .popup-content .form-group textarea,
+    .popup-content .form-group select {
+        width: 100%;
+        padding: 1rem;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        color: #ffffff;
+        font-size: 1rem;
+        font-family: inherit;
+        transition: all 0.3s ease;
+    }
+    
+    .popup-content .form-group input[type="text"]:focus,
+    .popup-content .form-group textarea:focus,
+    .popup-content .form-group select:focus {
+        outline: none;
+        border-color: #3498db;
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+    }
+    
+    .popup-content .form-group textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+    
+    .popup-content .form-group small {
+        display: block;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+    }
+    
+    .popup-content .checkbox-group {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .popup-content .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: #ffffff;
+        font-size: 0.95rem;
+        cursor: pointer;
+        user-select: none;
+    }
+    
+    .popup-content .checkbox-label input[type="checkbox"] {
+        display: none;
+    }
+    
+    .popup-content .checkmark {
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.05);
+        position: relative;
+        transition: all 0.3s ease;
+    }
+    
+    .popup-content .checkbox-label input[type="checkbox"]:checked + .checkmark {
+        background: #3498db;
+        border-color: #3498db;
+    }
+    
+    .popup-content .checkbox-label input[type="checkbox"]:checked + .checkmark::after {
+        content: '✓';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    
+    .popup-content .file-upload-area {
+        border: 2px dashed rgba(255, 255, 255, 0.3);
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.02);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .popup-content .file-upload-area:hover {
+        border-color: #3498db;
+        background: rgba(52, 152, 219, 0.05);
+    }
+    
+    .popup-content .file-upload-area i {
+        font-size: 2rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+    
+    .popup-content .file-upload-area p {
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 500;
+    }
+    
+    .popup-content .file-upload-area small {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.85rem;
+    }
+    
+    .popup-content .file-preview {
+        position: relative;
+        margin-top: 1rem;
+        border-radius: 12px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .popup-content .file-preview img {
+        width: 100%;
+        max-height: 150px;
+        object-fit: cover;
+        display: block;
+    }
+    
+    .popup-content .remove-file-btn {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        background: rgba(231, 76, 60, 0.9);
+        border: none;
+        color: white;
+        padding: 0.5rem;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+    }
+    
+    .popup-content .remove-file-btn:hover {
+        background: rgba(231, 76, 60, 1);
+        transform: scale(1.1);
+    }
+    
+    .popup-content .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .popup-content .btn {
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 12px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-height: 50px;
+    }
+    
+    .popup-content .btn-primary {
+        background: linear-gradient(45deg, #e74c3c, #c0392b);
+        color: white;
+    }
+    
+    .popup-content .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(231, 76, 60, 0.3);
+    }
+    
+    /* Стили для отображения имени файла аватара */
+    .avatar-preview {
+        margin-top: 15px;
+        text-align: center;
+        padding: 12px 15px;
+        background: rgba(52, 152, 219, 0.1);
+        border-radius: 8px;
+        border: 1px solid rgba(52, 152, 219, 0.2);
+    }
+    
+    .avatar-preview span {
+        display: block;
+        color: #3498db;
+        font-size: 14px;
+        font-weight: 500;
+        word-break: break-all;
+    }
+    
+    .popup-content .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .popup-content .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        transform: translateY(-2px);
+    }
+    
+    /* Уведомления */
+    .notification {
+        position: fixed;
+        top: 2rem;
+        right: 2rem;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        backdrop-filter: blur(10px);
+        z-index: 1001;
+        transform: translateX(400px);
+        transition: transform 0.3s ease;
+        max-width: 400px;
+    }
+    
+    .notification.show {
+        transform: translateX(0);
+    }
+    
+    .notification.success {
+        border-color: rgba(46, 204, 113, 0.5);
+        background: rgba(46, 204, 113, 0.1);
+    }
+    
+    .notification.error {
+        border-color: rgba(231, 76, 60, 0.5);
+        background: rgba(231, 76, 60, 0.1);
+    }
+    
+    .notification i {
+        font-size: 1.2rem;
+    }
+    
+    .notification.success i {
+        color: #27ae60;
+    }
+    
+    .notification.error i {
+        color: #e74c3c;
+    }
+    
+    /* Адаптивность поп-апа */
+    @media (max-width: 768px) {
+        .popup-content {
+            width: 95%;
+            max-height: 95vh;
+        }
+        
+        .popup-header {
+            padding: 1rem 1.5rem;
+        }
+        
+        .popup-header h2 {
+            font-size: 1.3rem;
+        }
+        
+        .popup-content form {
+            padding: 1.5rem;
+        }
+        
+        .popup-content .form-actions {
+            flex-direction: column;
+        }
+        
+        .popup-content .btn {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .notification {
+            right: 1rem;
+            left: 1rem;
+            max-width: none;
+        }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,1093 @@
+{% extends "base.html" %}
+
+{% block title %}{{ community.name }} - Линка{% endblock %}
+
+{% block content %}
+<div class="community-page-layout">
+    <!-- Заголовок сообщества -->
+    <div class="community-header">
+        <div class="community-cover-large">
+            {% if community.cover_image %}
+                <img src="{{ url_for('static', filename=community.cover_image) }}" alt="Обложка {{ community.name }}">
+            {% else %}
+                <div class="default-cover-large">
+                    <i class="fas fa-users"></i>
+                </div>
+            {% endif %}
+            
+            <!-- Статус приватности -->
+            {% if community.is_private %}
+                <div class="privacy-badge-large private">
+                    <i class="fas fa-lock"></i> Приватное
+                </div>
+            {% else %}
+                <div class="privacy-badge-large public">
+                    <i class="fas fa-globe"></i> Публичное
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="community-info-large">
+            <div class="community-avatar-large">
+                {% if community.avatar %}
+                    <img src="{{ url_for('static', filename=community.avatar) }}" alt="Аватар {{ community.name }}">
+                {% else %}
+                    <div class="default-avatar-large">
+                        {{ community.name[0].upper() }}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="community-details-large">
+                <h1 class="community-name-large">{{ community.name }}</h1>
+                
+                {% if community.description %}
+                    <p class="community-description-large">{{ community.description }}</p>
+                {% endif %}
+                
+                {% if community.category %}
+                    <span class="community-category-large">{{ community.category }}</span>
+                {% endif %}
+                
+                <div class="community-stats-large">
+                    <div class="stat-large">
+                        <i class="fas fa-users"></i>
+                        <span>{{ member_count }} участников</span>
+                    </div>
+                    <div class="stat-large">
+                        <i class="fas fa-newspaper"></i>
+                        <span>{{ posts|length }} постов</span>
+                    </div>
+                </div>
+                
+
+                
+                <div class="community-actions-large">
+                    {% if community.creator_id == user_id %}
+                        <div class="creator-actions">
+                            <span class="creator-badge-large">
+                                <i class="fas fa-crown"></i> Вы создатель
+                            </span>
+                            <a href="{{ url_for('edit_community', community_id=community.id) }}" class="btn btn-primary">
+                                <i class="fas fa-edit"></i> Редактировать
+                            </a>
+                        </div>
+                    {% elif is_member %}
+                        <a href="{{ url_for('leave_community', community_id=community.id) }}" class="btn btn-danger">
+                            <i class="fas fa-sign-out-alt"></i> Покинуть
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('join_community', community_id=community.id) }}" class="btn btn-success">
+                            <i class="fas fa-user-plus"></i> Присоединиться
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Создание поста -->
+    {% if is_member or community.creator_id == user_id %}
+    <div class="create-post-section">
+        <div class="create-post-card">
+            <h3><i class="fas fa-edit"></i> Создать пост</h3>
+            
+            <form method="POST" action="{{ url_for('create_community_post', community_id=community.id) }}" class="create-post-form" enctype="multipart/form-data">
+                <div class="form-group">
+                    <textarea name="content" class="post-textarea" placeholder="Напишите что-нибудь интересное..." rows="4" required></textarea>
+                </div>
+                
+                <div class="post-options">
+                    <div class="option-group">
+                        <label>Эмодзи:</label>
+                        <input type="text" name="emoji" class="emoji-input" placeholder="😊" maxlength="10">
+                    </div>
+                    
+                    <div class="option-group">
+                        <label>Категория:</label>
+                        <select name="category" class="category-select">
+                            <option value="">Без категории</option>
+                            <option value="Обсуждение">💬 Обсуждение</option>
+                            <option value="Новости">📰 Новости</option>
+                            <option value="Вопрос">❓ Вопрос</option>
+                            <option value="Объявление">📢 Объявление</option>
+                        </select>
+                    </div>
+                    
+                    <div class="option-group">
+                        <label>Теги:</label>
+                        <input type="text" name="tags" class="tags-input" placeholder="тег1, тег2, тег3">
+                    </div>
+                </div>
+                
+                <div class="media-upload">
+                    <div class="upload-group">
+                        <label for="image">📷 Изображение</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="image" name="image" accept="image/*">
+                            <label for="image" class="file-input-label">Выберите файл</label>
+                        </div>
+                    </div>
+                    
+                    <div class="upload-group">
+                        <label for="video">🎥 Видео</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="video" name="video" accept="video/*">
+                            <label for="video" class="file-input-label">Выберите файл</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Опубликовать
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Посты сообщества -->
+    <div class="posts-section">
+        <h3><i class="fas fa-newspaper"></i> Посты сообщества</h3>
+        
+        {% if posts %}
+            <div class="posts-container">
+                {% for post in posts %}
+                <article class="post-card" data-post-id="{{ post.id }}">
+                    <div class="post-header">
+                        <div class="post-user-info">
+                            <div class="post-avatar">
+                                {% if post.user and post.user.username %}
+                                    {{ post.user.username[0].upper() }}
+                                {% else %}
+                                    ?
+                                {% endif %}
+                            </div>
+                            <div class="user-details">
+                                <h4 class="user-name">
+                                    {% if post.user and post.user.username %}
+                                        <a href="{{ url_for('profile', username=post.user.username) }}">
+                                            {{ post.user.first_name }} {{ post.user.last_name }}
+                                        </a>
+                                    {% else %}
+                                        <span>Пользователь удален</span>
+                                    {% endif %}
+                                </h4>
+                                <div class="post-meta">
+                                    {% if post.user and post.user.username %}
+                                        <span class="username">@{{ post.user.username }}</span>
+                                    {% else %}
+                                        <span class="username">@deleted</span>
+                                    {% endif %}
+                                    <span class="post-time">{{ post.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="post-content">
+                        <p>{{ post.content }}</p>
+                        
+                        {% if post.emoji %}
+                            <div class="post-emoji">{{ post.emoji }}</div>
+                        {% endif %}
+                        
+                        {% if post.image %}
+                            <div class="post-image">
+                                <img src="{{ url_for('static', filename=post.image) }}" alt="Изображение в посте">
+                            </div>
+                        {% endif %}
+                        
+                        {% if post.video %}
+                            <div class="post-video">
+                                <video controls>
+                                    <source src="{{ url_for('static', filename=post.video) }}" type="video/mp4">
+                                    Ваш браузер не поддерживает видео.
+                                </video>
+                            </div>
+                        {% endif %}
+                        
+                        {% if post.category %}
+                            <div class="post-category">{{ post.category }}</div>
+                        {% endif %}
+                        
+                        {% if post.tags %}
+                            <div class="post-tags">
+                                {% for tag in post.get_tags_list() %}
+                                    <span class="tag">{{ tag }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="post-stats">
+                        <div class="stat">
+                            <i class="fas fa-heart"></i>
+                            <span>{{ post.likes_count }}</span>
+                        </div>
+                        <div class="stat">
+                            <i class="fas fa-comment"></i>
+                            <span>{{ post._comments_list|length }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="post-actions">
+                        <button class="action-btn like-btn {% if post.user_liked %}liked{% endif %}" data-post-id="{{ post.id }}">
+                            <i class="fas fa-heart"></i>
+                            <span>{% if post.user_liked %}Лайкнуто{% else %}Лайк{% endif %}</span>
+                        </button>
+                        
+                        <button class="action-btn comment-btn" onclick="toggleComments({{ post.id }})">
+                            <i class="fas fa-comment"></i>
+                            <span>Комментарии</span>
+                        </button>
+                        
+                        {% if post.user_id == user_id or community.creator_id == user_id %}
+                            <button class="action-btn delete-btn" onclick="deleteCommunityPost({{ post.id }})">
+                                <i class="fas fa-trash"></i>
+                                <span>Удалить</span>
+                            </button>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Комментарии -->
+                    <div class="comments-section" id="comments-{{ post.id }}" style="display: none;">
+                        <h4>Комментарии ({{ post._comments_list|length }})</h4>
+                        
+                        <div class="comments-list">
+                            {% for comment in post._comments_list %}
+                            <div class="comment">
+                                <div class="comment-user">
+                                    <div class="comment-avatar">
+                                        {% if comment.user and comment.user.username %}
+                                            {{ comment.user.username[0].upper() }}
+                                        {% else %}
+                                            ?
+                                        {% endif %}
+                                    </div>
+                                    <div class="comment-content">
+                                        <div class="comment-header">
+                                            {% if comment.user and comment.user.username %}
+                                                <span class="comment-username">{{ comment.user.first_name }} {{ comment.user.last_name }}</span>
+                                            {% else %}
+                                                <span class="comment-username">Пользователь удален</span>
+                                            {% endif %}
+                                            <span class="comment-time">{{ comment.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                                        </div>
+                                        <p>{{ comment.content }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="add-comment">
+                            <textarea class="comment-input" placeholder="Написать комментарий..." rows="2"></textarea>
+                            <button class="btn btn-primary btn-sm" onclick="addComment({{ post.id }})">
+                                <i class="fas fa-paper-plane"></i> Отправить
+                            </button>
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-newspaper"></i>
+                </div>
+                <h3>Пока нет постов</h3>
+                <p>Будьте первым, кто опубликует пост в этом сообществе!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    function toggleComments(postId) {
+        const commentsSection = document.getElementById(`comments-${postId}`);
+        if (commentsSection.style.display === 'none') {
+            commentsSection.style.display = 'block';
+        } else {
+            commentsSection.style.display = 'none';
+        }
+    }
+    
+    function addComment(postId) {
+        const commentInput = document.querySelector(`#comments-${postId} .comment-input`);
+        const content = commentInput.value.trim();
+        
+        if (!content) return;
+        
+        // Отправляем комментарий на сервер
+        fetch(`/add_community_comment/${postId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                content: content
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Перезагружаем страницу для отображения нового комментария
+                window.location.reload();
+            } else {
+                alert('Ошибка: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Произошла ошибка при добавлении комментария');
+        });
+        
+        commentInput.value = '';
+    }
+    
+    // Функция для лайков постов сообщества
+    document.addEventListener('DOMContentLoaded', function() {
+        // Обработчики для кнопок лайков
+        document.querySelectorAll('.like-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const postId = this.dataset.postId;
+                likeCommunityPost(postId, this);
+            });
+        });
+    });
+    
+    function likeCommunityPost(postId, button) {
+        fetch(`/like_community_post/${postId}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Обновляем счетчик лайков
+                const statsContainer = button.closest('.post-actions').previousElementSibling;
+                const likeCount = statsContainer.querySelector('.stat:first-child span');
+                likeCount.textContent = data.likes_count;
+                
+                // Обновляем внешний вид кнопки
+                if (data.liked) {
+                    button.classList.add('liked');
+                    button.innerHTML = '<i class="fas fa-heart"></i><span>Лайкнуто</span>';
+                } else {
+                    button.classList.remove('liked');
+                    button.innerHTML = '<i class="fas fa-heart"></i><span>Лайк</span>';
+                }
+            } else {
+                alert('Ошибка: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Произошла ошибка при лайке');
+        });
+    }
+    
+    // Функция удаления поста сообщества
+    function deleteCommunityPost(postId) {
+        if (!confirm('Вы уверены, что хотите удалить этот пост?')) {
+            return;
+        }
+        
+        fetch(`/delete_community_post/${postId}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Удаляем пост из DOM
+                const postElement = document.querySelector(`[data-post-id="${postId}"]`);
+                if (postElement) {
+                    postElement.remove();
+                }
+                // Показываем уведомление
+                alert('Пост успешно удален');
+            } else {
+                alert('Ошибка: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Произошла ошибка при удалении поста');
+        });
+    }
+</script>
+
+<style>
+    .community-page-layout {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+    
+    .community-header {
+        margin-bottom: 3rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+    }
+    
+    .community-cover-large {
+        position: relative;
+        height: 300px;
+        overflow: hidden;
+    }
+    
+    .community-cover-large img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .default-cover-large {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 5rem;
+    }
+    
+    .privacy-badge-large {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        color: white;
+        font-size: 1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .privacy-badge-large.private {
+        background: rgba(231, 76, 60, 0.9);
+    }
+    
+    .privacy-badge-large.public {
+        background: rgba(46, 204, 113, 0.9);
+    }
+    
+    .community-info-large {
+        padding: 2rem;
+        display: flex;
+        gap: 2rem;
+        align-items: flex-start;
+    }
+    
+    .community-avatar-large {
+        flex-shrink: 0;
+    }
+    
+    .community-avatar-large img {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    
+    .default-avatar-large {
+        width: 120px;
+        height: 120px;
+        background: linear-gradient(45deg, #f39c12, #e67e22);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+        font-size: 3rem;
+    }
+    
+    .community-details-large {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .community-name-large {
+        color: #ffffff;
+        margin: 0 0 1rem 0;
+        font-size: 2.5rem;
+        font-weight: 700;
+    }
+    
+    .community-description-large {
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0 0 1rem 0;
+        line-height: 1.6;
+        font-size: 1.1rem;
+    }
+    
+    .community-category-large {
+        display: inline-block;
+        background: rgba(52, 152, 219, 0.2);
+        color: #3498db;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-bottom: 1.5rem;
+    }
+    
+    .community-stats-large {
+        display: flex;
+        gap: 2rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stat-large {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1rem;
+    }
+    
+    .stat-large i {
+        color: #3498db;
+        font-size: 1.1rem;
+    }
+    
+    .community-actions-large {
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .creator-badge-large {
+        background: linear-gradient(45deg, #f39c12, #e67e22);
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .creator-actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+    
+    .create-post-section {
+        margin-bottom: 3rem;
+    }
+    
+    .create-post-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 2rem;
+        backdrop-filter: blur(10px);
+    }
+    
+    .create-post-card h3 {
+        color: #ffffff;
+        margin: 0 0 1.5rem 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .post-textarea {
+        width: 100%;
+        padding: 1rem;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        color: #ffffff;
+        font-size: 1rem;
+        font-family: inherit;
+        resize: vertical;
+        min-height: 100px;
+        margin-bottom: 1rem;
+    }
+    
+    .post-textarea:focus {
+        outline: none;
+        border-color: #3498db;
+        background: rgba(255, 255, 255, 0.08);
+    }
+    
+    .post-options {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .option-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .option-group label {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .emoji-input,
+    .category-select,
+    .tags-input {
+        padding: 0.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        color: #ffffff;
+        font-size: 0.9rem;
+    }
+    
+    .media-upload {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .upload-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .upload-group label {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .form-actions {
+        text-align: right;
+    }
+    
+    .posts-section h3 {
+        color: #ffffff;
+        margin: 0 0 2rem 0;
+        font-size: 1.8rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .post-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        backdrop-filter: blur(10px);
+    }
+    
+    .post-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+    
+    .post-user-info {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .post-avatar {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(45deg, #f39c12, #e67e22);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+        font-size: 1.2rem;
+    }
+    
+    .user-details h4 {
+        color: #ffffff;
+        margin: 0 0 0.25rem 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    
+    .user-details a {
+        color: #ffffff;
+        text-decoration: none;
+    }
+    
+    .user-details a:hover {
+        color: #3498db;
+    }
+    
+    .post-meta {
+        display: flex;
+        gap: 1rem;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.9rem;
+    }
+    
+    .post-content {
+        margin-bottom: 1.5rem;
+    }
+    
+    .post-content p {
+        color: #ffffff;
+        margin: 0 0 1rem 0;
+        line-height: 1.6;
+        font-size: 1rem;
+    }
+    
+    .post-emoji {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+    
+    .post-image img,
+    .post-video video {
+        width: 100%;
+        max-height: 400px;
+        object-fit: cover;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+    }
+    
+    .post-category {
+        display: inline-block;
+        background: rgba(52, 152, 219, 0.2);
+        color: #3498db;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-bottom: 1rem;
+    }
+    
+    .post-tags {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+    
+    .tag {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.8);
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+    }
+    
+    .post-stats {
+        display: flex;
+        gap: 2rem;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .stat {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+    }
+    
+    .stat i {
+        color: #3498db;
+    }
+    
+    .post-actions {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .action-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.8);
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .action-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        transform: translateY(-2px);
+    }
+    
+    .action-btn.liked {
+        color: #e74c3c;
+    }
+    
+    .action-btn.liked i {
+        color: #e74c3c;
+    }
+    
+    .action-btn.delete-btn {
+        color: #e74c3c;
+        border-color: #e74c3c;
+    }
+    
+    .action-btn.delete-btn:hover {
+        background: rgba(231, 76, 60, 0.2);
+        border-color: #e74c3c;
+    }
+    
+    .action-btn.delete-btn i {
+        color: #e74c3c;
+    }
+    
+    .comments-section {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .comments-section h4 {
+        color: #ffffff;
+        margin: 0 0 1rem 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    
+    .comment {
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+    }
+    
+    .comment-user {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .comment-avatar {
+        width: 35px;
+        height: 35px;
+        background: linear-gradient(45deg, #f39c12, #e67e22);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+    
+    .comment-content {
+        flex: 1;
+    }
+    
+    .comment-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .comment-username {
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .comment-time {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+    }
+    
+    .comment-content p {
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0;
+        line-height: 1.4;
+        font-size: 0.9rem;
+    }
+    
+    .add-comment {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-end;
+        margin-top: 1rem;
+    }
+    
+    .comment-input {
+        flex: 1;
+        padding: 0.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        color: #ffffff;
+        font-size: 0.9rem;
+        font-family: inherit;
+        resize: vertical;
+    }
+    
+    .comment-input:focus {
+        outline: none;
+        border-color: #3498db;
+    }
+    
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 12px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(45deg, #3498db, #2980b9);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+    }
+    
+    .btn-success {
+        background: linear-gradient(45deg, #27ae60, #229954);
+        color: white;
+    }
+    
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(39, 174, 96, 0.3);
+    }
+    
+    .btn-danger {
+        background: linear-gradient(45deg, #e74c3c, #c0392b);
+        color: white;
+    }
+    
+    .btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(231, 76, 60, 0.3);
+    }
+    
+    .btn-sm {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .empty-icon {
+        font-size: 4rem;
+        color: rgba(255, 255, 255, 0.3);
+        margin-bottom: 1.5rem;
+    }
+    
+    .empty-state h3 {
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 1rem;
+        font-size: 1.8rem;
+    }
+    
+    .empty-state p {
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 2rem;
+        font-size: 1.1rem;
+    }
+    
+    /* Адаптивность */
+    @media (max-width: 768px) {
+        .community-info-large {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .community-stats-large {
+            justify-content: center;
+        }
+        
+        .community-actions-large {
+            justify-content: center;
+        }
+        
+        .post-options {
+            flex-direction: column;
+        }
+        
+        .media-upload {
+            flex-direction: column;
+        }
+        
+        .add-comment {
+            flex-direction: column;
+            align-items: stretch;
+        }
+    }
+</style>
+
+<script>
+    // Обновление текста кнопок при выборе файлов
+    document.addEventListener('DOMContentLoaded', function() {
+        const imageInput = document.getElementById('image');
+        const videoInput = document.getElementById('video');
+        
+        if (imageInput) {
+            imageInput.addEventListener('change', function() {
+                const label = this.nextElementSibling;
+                if (this.files.length > 0) {
+                    label.textContent = this.files[0].name;
+                } else {
+                    label.textContent = 'Выберите файл';
+                }
+            });
+        }
+        
+        if (videoInput) {
+            videoInput.addEventListener('change', function() {
+                const label = this.nextElementSibling;
+                if (this.files.length > 0) {
+                    label.textContent = this.files[0].name;
+                } else {
+                    label.textContent = 'Выберите файл';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

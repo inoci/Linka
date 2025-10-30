@@ -49,7 +49,7 @@
         
         <div class="edit-profile-info">
             <h3><i class="fas fa-info-circle"></i> Информация</h3>
-            <ul>
+            <ul class="list-marked">
                 <li>Имя пользователя должно быть уникальным</li>
                 <li>Имя и фамилия будут отображаться в профиле</li>
                 <li>О себе - это краткое описание для других пользователей</li>
@@ -144,6 +144,41 @@
         font-style: italic;
     }
     
+    .error-message {
+        color: #e74c3c;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        background: rgba(231, 76, 60, 0.1);
+        border-radius: 8px;
+        border-left: 3px solid #e74c3c;
+    }
+    
+    .form-control.error {
+        border-color: #e74c3c;
+        box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.2);
+    }
+    
+    .success-message {
+        color: #27ae60;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        background: rgba(39, 174, 96, 0.1);
+        border-radius: 8px;
+        border-left: 3px solid #27ae60;
+    }
+    
+    .loading-message {
+        color: #3498db;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        background: rgba(52, 152, 219, 0.1);
+        border-radius: 8px;
+        border-left: 3px solid #3498db;
+    }
+    
     .form-actions {
         display: flex;
         gap: 1rem;
@@ -177,6 +212,13 @@
     .btn-primary:hover {
         transform: translateY(-2px);
         box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+    }
+    
+    .btn-primary:disabled {
+        background: rgba(52, 152, 219, 0.5);
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
     }
     
     .btn-secondary {
@@ -246,4 +288,197 @@
         }
     }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.edit-profile-form');
+    const usernameInput = document.getElementById('username');
+    const submitBtn = document.querySelector('button[type="submit"]');
+    
+    // Функция валидации username
+    function validateUsername(username) {
+        const usernameRegex = /^[a-zA-Z0-9_]+$/;
+        return usernameRegex.test(username) && username.length >= 3 && username.length <= 30;
+    }
+    
+    // Функция показа ошибки
+    function showError(input, message) {
+        let errorDiv = input.parentNode.querySelector('.error-message');
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.style.color = '#e74c3c';
+            errorDiv.style.fontSize = '0.9rem';
+            errorDiv.style.marginTop = '0.5rem';
+            input.parentNode.appendChild(errorDiv);
+        }
+        errorDiv.textContent = message;
+        input.style.borderColor = '#e74c3c';
+    }
+    
+    // Функция скрытия ошибки
+    function hideError(input) {
+        const errorDiv = input.parentNode.querySelector('.error-message');
+        if (errorDiv) {
+            errorDiv.remove();
+        }
+        input.style.borderColor = '';
+    }
+    
+    // Функция скрытия всех сообщений
+    function hideAllMessages(input) {
+        const errorDiv = input.parentNode.querySelector('.error-message');
+        const successDiv = input.parentNode.querySelector('.success-message');
+        const loadingDiv = input.parentNode.querySelector('.loading-message');
+        if (errorDiv) {
+            errorDiv.remove();
+        }
+        if (successDiv) {
+            successDiv.remove();
+        }
+        if (loadingDiv) {
+            loadingDiv.remove();
+        }
+        input.style.borderColor = '';
+    }
+    
+    // Валидация при вводе username с задержкой
+    let usernameCheckTimeout;
+    usernameInput.addEventListener('input', function() {
+        const username = this.value.trim();
+        hideAllMessages(this);
+        
+        // Очищаем предыдущий таймаут
+        clearTimeout(usernameCheckTimeout);
+        
+        if (username.length > 0) {
+            if (!validateUsername(username)) {
+                if (username.length < 3) {
+                    showError(this, 'Username должен быть не менее 3 символов');
+                } else if (username.length > 30) {
+                    showError(this, 'Username должен быть не более 30 символов');
+                } else {
+                    showError(this, 'Username может содержать только буквы, цифры и подчеркивания');
+                }
+            } else {
+                // Проверяем доступность username через AJAX с задержкой
+                usernameCheckTimeout = setTimeout(() => {
+                    checkUsernameAvailability(username);
+                }, 500);
+            }
+        }
+    });
+    
+    // Проверка при потере фокуса
+    usernameInput.addEventListener('blur', function() {
+        const username = this.value.trim();
+        if (username.length > 0 && validateUsername(username)) {
+            checkUsernameAvailability(username);
+        }
+    });
+    
+    // Очистка сообщений при получении фокуса
+    usernameInput.addEventListener('focus', function() {
+        hideAllMessages(this);
+    });
+    
+    // Проверка при нажатии Enter
+    usernameInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            const username = this.value.trim();
+            if (username.length > 0 && validateUsername(username)) {
+                checkUsernameAvailability(username);
+            }
+        }
+    });
+    
+    // Функция проверки доступности username
+    function checkUsernameAvailability(username) {
+        // Показываем индикатор загрузки
+        let loadingDiv = usernameInput.parentNode.querySelector('.loading-message');
+        if (!loadingDiv) {
+            loadingDiv = document.createElement('div');
+            loadingDiv.className = 'loading-message';
+            loadingDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Проверяем доступность...';
+            loadingDiv.style.color = '#3498db';
+            loadingDiv.style.fontSize = '0.9rem';
+            loadingDiv.style.marginTop = '0.5rem';
+            usernameInput.parentNode.appendChild(loadingDiv);
+        }
+        
+        fetch(`/api/check-username?username=${encodeURIComponent(username)}`)
+            .then(response => response.json())
+            .then(data => {
+                // Убираем индикатор загрузки
+                if (loadingDiv) {
+                    loadingDiv.remove();
+                }
+                
+                if (!data.available) {
+                    showError(usernameInput, data.message);
+                } else {
+                    // Показываем сообщение об успехе
+                    let successDiv = usernameInput.parentNode.querySelector('.success-message');
+                    if (!successDiv) {
+                        successDiv = document.createElement('div');
+                        successDiv.className = 'success-message';
+                        successDiv.style.color = '#27ae60';
+                        successDiv.style.fontSize = '0.9rem';
+                        successDiv.style.marginTop = '0.5rem';
+                        usernameInput.parentNode.appendChild(successDiv);
+                    }
+                    successDiv.textContent = data.message;
+                    usernameInput.style.borderColor = '#27ae60';
+                    
+                    // Убираем сообщение через 3 секунды
+                    setTimeout(() => {
+                        if (successDiv) {
+                            successDiv.remove();
+                        }
+                        usernameInput.style.borderColor = '';
+                    }, 3000);
+                }
+            })
+            .catch(error => {
+                // Убираем индикатор загрузки
+                if (loadingDiv) {
+                    loadingDiv.remove();
+                }
+                console.error('Ошибка при проверке username:', error);
+                showError(usernameInput, 'Ошибка при проверке username');
+            });
+    }
+    
+    // Валидация при отправке формы
+    form.addEventListener('submit', function(e) {
+        const username = usernameInput.value.trim();
+        
+        // Очищаем все сообщения перед отправкой
+        hideAllMessages(usernameInput);
+        
+        if (!validateUsername(username)) {
+            e.preventDefault();
+            if (username.length < 3) {
+                showError(usernameInput, 'Username должен быть не менее 3 символов');
+            } else if (username.length > 30) {
+                showError(usernameInput, 'Username должен быть не более 30 символов');
+            } else {
+                showError(usernameInput, 'Username может содержать только буквы, цифры и подчеркивания');
+            }
+            usernameInput.focus();
+            return false;
+        }
+        
+        // Показываем индикатор загрузки
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Сохранение...';
+    });
+    
+    // Сброс кнопки при ошибке валидации
+    function resetSubmitButton() {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-save"></i> Сохранить изменения';
+    }
+});
+</script>
 {% endblock %}

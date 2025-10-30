@@ -1,0 +1,1680 @@
+{% extends "base.html" %}
+
+{% block title %}Редактировать {{ community.name }} - Линка{% endblock %}
+
+{% block content %}
+<div class="edit-page">
+    <!-- Заголовок страницы -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1>Редактирование сообщества</h1>
+            <p>Настройте параметры вашего сообщества</p>
+        </div>
+        <div class="header-actions">
+            <a href="{{ url_for('community', community_id=community.id) }}" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                Назад
+            </a>
+        </div>
+    </div>
+
+    <!-- Основной контент -->
+    <div class="edit-container">
+        <!-- Левая колонка - формы -->
+        <div class="forms-column">
+            <!-- Основная информация -->
+            <div class="form-card">
+                <div class="card-header">
+                    <i class="fas fa-info-circle"></i>
+                    <h3>Основная информация</h3>
+                </div>
+                
+                <form method="POST" enctype="multipart/form-data" class="edit-form">
+                    <div class="input-group">
+                        <label for="name">Название сообщества</label>
+                        <input type="text" id="name" name="name" value="{{ community.name }}" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="description">Описание</label>
+                        <textarea id="description" name="description" rows="4" placeholder="Расскажите о вашем сообществе...">{{ community.description or '' }}</textarea>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Тип сообщества</label>
+                        <div class="toggle-group">
+                            <label class="toggle-option">
+                                <input type="radio" name="is_private" value="false" {% if not community.is_private %}checked{% endif %}>
+                                <span class="toggle-label">
+                                    <i class="fas fa-globe"></i>
+                                    Публичное
+                                </span>
+                            </label>
+                            <label class="toggle-option">
+                                <input type="radio" name="is_private" value="true" {% if community.is_private %}checked{% endif %}>
+                                <span class="toggle-label">
+                                    <i class="fas fa-lock"></i>
+                                    Приватное
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="avatar">Аватар</label>
+                        <div class="avatar-section">
+                            {% if community.avatar %}
+                                <div class="current-avatar">
+                                    <img src="{{ url_for('static', filename=community.avatar) }}" alt="Текущий аватар">
+                                </div>
+                            {% endif %}
+                            <div class="file-input-wrapper">
+                                <input type="file" id="avatar" name="avatar" accept="image/*">
+                                <label for="avatar" class="file-input-label">Выберите аватар</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-save"></i>
+                        Сохранить основную информацию
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Дополнительная информация -->
+            <div class="form-card">
+                <div class="card-header">
+                    <i class="fas fa-cog"></i>
+                    <h3>Дополнительные настройки</h3>
+                </div>
+                
+                <form method="POST" enctype="multipart/form-data" class="edit-form">
+                    <div class="input-group">
+                        <label for="category">Категория</label>
+                        <select id="category" name="category">
+                            <option value="">Выберите категорию</option>
+                            <option value="Технологии" {% if community.category == 'Технологии' %}selected{% endif %}>💻 Технологии</option>
+                            <option value="Развлечения" {% if community.category == 'Развлечения' %}selected{% endif %}>🎮 Развлечения</option>
+                            <option value="Спорт" {% if community.category == 'Спорт' %}selected{% endif %}>⚽ Спорт</option>
+                            <option value="Музыка" {% if community.category == 'Музыка' %}selected{% endif %}>🎵 Музыка</option>
+                            <option value="Кино" {% if community.category == 'Кино' %}selected{% endif %}>🎬 Кино</option>
+                            <option value="Кулинария" {% if community.category == 'Кулинария' %}selected{% endif %}>🍳 Кулинария</option>
+                            <option value="Путешествия" {% if community.category == 'Путешествия' %}selected{% endif %}>✈️ Путешествия</option>
+                            <option value="Мода" {% if community.category == 'Мода' %}selected{% endif %}>👗 Мода</option>
+                            <option value="Авто" {% if community.category == 'Авто' %}selected{% endif %}>🚗 Авто</option>
+                            <option value="Образование" {% if community.category == 'Образование' %}selected{% endif %}>📚 Образование</option>
+                            <option value="Здоровье" {% if community.category == 'Здоровье' %}selected{% endif %}>🏥 Здоровье</option>
+                            <option value="Хобби" {% if community.category == 'Хобби' %}selected{% endif %}>🎨 Хобби</option>
+                            <option value="Бизнес" {% if community.category == 'Бизнес' %}selected{% endif %}>💼 Бизнес</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="website">Веб-сайт</label>
+                        <input type="url" id="website" name="website" value="{{ community.website or '' }}" placeholder="https://example.com">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="phone">Контактный телефон</label>
+                        <input type="tel" id="phone" name="phone" value="{{ community.phone or '' }}" placeholder="+7 (999) 123-45-67">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="city">Город</label>
+                        <select id="city" name="city">
+                            <option value="">Выберите город</option>
+                            <option value="Москва" {% if community.city == 'Москва' %}selected{% endif %}>Москва</option>
+                            <option value="Санкт-Петербург" {% if community.city == 'Санкт-Петербург' %}selected{% endif %}>Санкт-Петербург</option>
+                            <option value="Новосибирск" {% if community.city == 'Новосибирск' %}selected{% endif %}>Новосибирск</option>
+                            <option value="Екатеринбург" {% if community.city == 'Екатеринбург' %}selected{% endif %}>Екатеринбург</option>
+                            <option value="Казань" {% if community.city == 'Казань' %}selected{% endif %}>Казань</option>
+                            <option value="Нижний Новгород" {% if community.city == 'Нижний Новгород' %}selected{% endif %}>Нижний Новгород</option>
+                            <option value="Челябинск" {% if community.city == 'Челябинск' %}selected{% endif %}>Челябинск</option>
+                            <option value="Самара" {% if community.city == 'Самара' %}selected{% endif %}>Самара</option>
+                            <option value="Ростов-на-Дону" {% if community.city == 'Ростов-на-Дону' %}selected{% endif %}>Ростов-на-Дону</option>
+                            <option value="Уфа" {% if community.city == 'Уфа' %}selected{% endif %}>Уфа</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-save"></i>
+                        Сохранить настройки
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Правая колонка - быстрые действия -->
+        
+    <!-- Раздел управления участниками -->
+    <div id="members-content" class="dynamic-content" style="display: none;">
+        <div class="content-header">
+            <h2><i class="fas fa-users"></i> Управление участниками</h2>
+            <button class="back-to-main" onclick="showMainContent()">
+                <i class="fas fa-arrow-left"></i> Назад к редактированию
+            </button>
+        </div>
+        
+        <div class="content-body">
+            <div class="members-list">
+                <h3>Текущие участники</h3>
+                <div class="members-grid">
+                    {% if members %}
+                        {% for member in members %}
+                        <div class="member-card">
+                            <div class="member-avatar">
+                                {% if member.user.avatar %}
+                                    <img src="{{ member.user.avatar }}" alt="Аватар">
+                                {% else %}
+                                    <i class="fas fa-user"></i>
+                                {% endif %}
+                            </div>
+                            <div class="member-info">
+                                <h4>{{ member.user.username }}</h4>
+                                <p>{{ member.role }}</p>
+                            </div>
+                            {% if member.role != 'admin' and community.creator_id == session['user_id'] %}
+                            <button class="remove-member-btn" onclick="removeMember({{ member.user.id }})">
+                                <i class="fas fa-user-minus"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="no-members">В сообществе пока нет участников</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Раздел создания поста -->
+    <div id="create-post-content" class="dynamic-content" style="display: none;">
+        <div class="content-header">
+            <h2><i class="fas fa-newspaper"></i> Создать пост</h2>
+            <button class="back-to-main" onclick="showMainContent()">
+                <i class="fas fa-arrow-left"></i> Назад к редактированию
+            </button>
+        </div>
+        
+        <div class="content-body">
+            <form method="POST" action="{{ url_for('create_community_post', community_id=community.id) }}" class="post-form">
+                <div class="input-group">
+                    <label for="post-content">Содержание поста</label>
+                    <textarea id="post-content" name="content" rows="6" placeholder="Что нового в вашем сообществе?" required></textarea>
+                </div>
+                
+                <div class="post-options">
+                    <div class="option-group">
+                        <label for="post-emoji">Эмодзи</label>
+                        <input type="text" id="post-emoji" name="emoji" placeholder="😊">
+                    </div>
+                    
+                    <div class="option-group">
+                        <label for="post-location">Местоположение</label>
+                        <input type="text" id="post-location" name="location" placeholder="Где вы?">
+                    </div>
+                </div>
+                
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-paper-plane"></i>
+                    Опубликовать
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Раздел статистики -->
+    <div id="stats-content" class="dynamic-content" style="display: none;">
+        <div class="content-header">
+            <h2><i class="fas fa-chart-line"></i> Статистика сообщества</h2>
+            <button class="back-to-main" onclick="showMainContent()">
+                <i class="fas fa-arrow-left"></i> Назад к редактированию
+            </button>
+        </div>
+        
+        <div class="content-body">
+            <div class="stats-overview">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ member_count }}</div>
+                        <div class="stat-label">Участников</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-newspaper"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ post_count }}</div>
+                        <div class="stat-label">Постов</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ comment_count }}</div>
+                        <div class="stat-label">Комментариев</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ like_count }}</div>
+                        <div class="stat-label">Лайков</div>
+                    </div>
+                </div>
+            </div>
+            
+                        <div class="activity-chart">
+                <h3>Активность за неделю</h3>
+                <div class="chart-container">
+                    <!-- Стековая областная диаграмма -->
+                    <div class="area-chart">
+                        <canvas id="activityAreaChart" width="600" height="300"></canvas>
+                    </div>
+                    
+                    <!-- Легенда диаграммы -->
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-color posts-color"></div>
+                            <span>Посты</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color comments-color"></div>
+                            <span>Комментарии</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color likes-color"></div>
+                            <span>Лайки</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Детальная разбивка по дням -->
+                <div class="activity-breakdown">
+                    <h4>Детальная активность по дням</h4>
+                    <div class="breakdown-grid">
+                        {% set days = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'] %}
+                        {% for day in days %}
+                            {% set day_data = weekly_activity[day] %}
+                            <div class="breakdown-day">
+                                <h5>{{ day }}</h5>
+                                <div class="breakdown-stats">
+                                    <div class="breakdown-stat">
+                                        <span class="stat-label">Посты:</span>
+                                        <span class="stat-value posts-color">{{ day_data.posts }}</span>
+                                    </div>
+                                    <div class="breakdown-stat">
+                                        <span class="stat-label">Комментарии:</span>
+                                        <span class="stat-value comments-color">{{ day_data.comments }}</span>
+                                    </div>
+                                    <div class="breakdown-stat">
+                                        <span class="stat-label">Лайки:</span>
+                                        <span class="stat-value likes-color">{{ day_data.likes }}</span>
+                                    </div>
+                                    <div class="breakdown-stat total">
+                                        <span class="stat-label">Всего:</span>
+                                        <span class="stat-value total-color">{{ day_data.posts + day_data.comments + day_data.likes }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Раздел настроек дизайна -->
+    <div id="comments-content" class="dynamic-content" style="display: none;">
+        <div class="content-header">
+            <h2><i class="fas fa-comments"></i> Настройки комментариев</h2>
+            <button class="back-to-main" onclick="showMainContent()">
+                <i class="fas fa-arrow-left"></i> Назад к редактированию
+            </button>
+        </div>
+        
+        <div class="content-body">
+            <div class="comments-options">
+                <!-- Основная настройка -->
+                <div class="option-group">
+                    <label class="main-toggle">
+                        <input type="checkbox" id="comments-enabled" name="comments-enabled" 
+                               {% if community.comments_enabled %}checked{% endif %}>
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label">Разрешить комментарии в сообществе</span>
+                    </label>
+                    <p class="option-description">Включите, чтобы участники могли оставлять комментарии к постам</p>
+                </div>
+                
+                <!-- Фильтры (появляются только если комментарии включены) -->
+                <div id="filters-section" class="filters-section" style="display: none;">
+                    <h3><i class="fas fa-filter"></i> Фильтры комментариев</h3>
+                    
+                    <div class="filter-group">
+                        <label class="filter-option">
+                            <input type="checkbox" id="profanity-filter" name="profanity-filter"
+                                   {% if community.profanity_filter %}checked{% endif %}>
+                            <span class="checkbox-custom"></span>
+                            <span>Фильтр нецензурных выражений</span>
+                        </label>
+                        <p class="filter-description">Автоматически блокирует комментарии с матом</p>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-option">
+                            <input type="checkbox" id="hostile-filter" name="hostile-filter"
+                                   {% if community.hostile_filter %}checked{% endif %}>
+                            <span class="checkbox-custom"></span>
+                            <span>Фильтр враждебных высказываний</span>
+                        </label>
+                        <p class="filter-description">Блокирует агрессивные и оскорбительные комментарии</p>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-option">
+                            <input type="checkbox" id="keyword-filter" name="keyword-filter"
+                                   {% if community.keyword_filter %}checked{% endif %}>
+                            <span class="checkbox-custom"></span>
+                            <span>Фильтр по ключевым словам</span>
+                        </label>
+                        <p class="filter-description">Блокирует комментарии с запрещенными словами</p>
+                    </div>
+                    
+                    <!-- Настройки ключевых слов -->
+                    <div id="keywords-settings" class="keywords-settings" style="display: none;">
+                        <h4><i class="fas fa-key"></i> Запрещенные ключевые слова</h4>
+                        <div class="keywords-input">
+                            <textarea id="banned-keywords" name="banned-keywords" 
+                                      placeholder="Введите запрещенные слова через запятую&#10;Например: спам, реклама, мошенничество"
+                                      rows="4">{{ community.banned_keywords or '' }}</textarea>
+                            <p class="input-hint">Слова разделяются запятыми. Комментарии с этими словами будут автоматически блокироваться.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="submit-btn" onclick="saveCommentSettings()">
+                    <i class="fas fa-save"></i>
+                    Сохранить настройки комментариев
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Стилистика Линка - темная тема с синими акцентами */
+    .edit-page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+        min-height: 100vh;
+        color: #ffffff;
+    }
+    
+    /* Заголовок страницы */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 3rem;
+        padding: 2rem;
+        background: rgba(52, 152, 219, 0.1);
+        border: 2px solid rgba(52, 152, 219, 0.3);
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(52, 152, 219, 0.2);
+    }
+    
+    .header-content h1 {
+        color: #ffffff;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0 0 0.5rem 0;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    
+    .header-content p {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1.1rem;
+        margin: 0;
+    }
+    
+    .back-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background: rgba(52, 152, 219, 0.2);
+        color: #3498db;
+        text-decoration: none;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        border: 2px solid rgba(52, 152, 219, 0.4);
+        font-weight: 600;
+    }
+    
+    .back-btn:hover {
+        background: rgba(52, 152, 219, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+    }
+    
+    /* Основной контейнер */
+    .edit-container {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+    }
+    
+    /* Карточки форм */
+    .form-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid rgba(52, 152, 219, 0.2);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+    
+    .form-card:hover {
+        border-color: rgba(52, 152, 219, 0.4);
+        box-shadow: 0 25px 50px rgba(52, 152, 219, 0.2);
+        transform: translateY(-2px);
+    }
+    
+    .card-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid rgba(52, 152, 219, 0.3);
+    }
+    
+    .card-header i {
+        font-size: 1.5rem;
+        color: #3498db;
+    }
+    
+    .card-header h3 {
+        color: #ffffff;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+    }
+    
+    /* Формы */
+    .edit-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .input-group label {
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+    
+    .input-group input,
+    .input-group textarea,
+    .input-group select {
+        padding: 1rem;
+        border: 2px solid rgba(52, 152, 219, 0.3);
+        border-radius: 12px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.05);
+        color: #ffffff;
+        font-family: inherit;
+    }
+    
+    .input-group input:focus,
+    .input-group textarea:focus,
+    .input-group select:focus {
+        outline: none;
+        border-color: #3498db;
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        transform: translateY(-1px);
+        background: rgba(255, 255, 255, 0.08);
+    }
+    
+    .input-group input::placeholder,
+    .input-group textarea::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+    
+    .input-group textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+    
+    /* Переключатели */
+    .toggle-group {
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .toggle-option {
+        flex: 1;
+        cursor: pointer;
+    }
+    
+    .toggle-option input[type="radio"] {
+        display: none;
+    }
+    
+    .toggle-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        border: 2px solid rgba(52, 152, 219, 0.3);
+        border-radius: 12px;
+        text-align: center;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .toggle-option input[type="radio"]:checked + .toggle-label {
+        border-color: #3498db;
+        background: rgba(52, 152, 219, 0.2);
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+    }
+    
+    /* Аватар */
+    .avatar-section {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .current-avatar img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #3498db;
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    }
+    
+    /* Кнопки */
+    .submit-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 1rem 2rem;
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 1rem;
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    }
+    
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+        background: linear-gradient(135deg, #2980b9, #1f5f8b);
+    }
+    
+    /* Правая колонка */
+    .actions-column {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+    
+    .quick-actions,
+    .community-stats {
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid rgba(52, 152, 219, 0.2);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+    
+    .quick-actions:hover,
+    .community-stats:hover {
+        border-color: rgba(52, 152, 219, 0.4);
+        transform: translateY(-2px);
+    }
+    
+    .quick-actions h3,
+    .community-stats h3 {
+        color: #ffffff;
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin: 0 0 1.5rem 0;
+        text-align: center;
+    }
+    
+    .action-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(52, 152, 219, 0.2);
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+    
+    .action-item:hover {
+        background: rgba(52, 152, 219, 0.1);
+        border-color: rgba(52, 152, 219, 0.4);
+        transform: translateX(5px);
+    }
+    
+    .action-item i {
+        font-size: 1.5rem;
+        color: #3498db;
+        width: 40px;
+        text-align: center;
+    }
+    
+    .action-content h4 {
+        color: #ffffff;
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0 0 0.25rem 0;
+    }
+    
+    .action-content p {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        margin: 0 0 0.5rem 0;
+    }
+    
+    .action-btn {
+        color: #3498db;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: color 0.3s ease;
+    }
+    
+    .action-btn:hover {
+        color: #2980b9;
+    }
+    
+    /* Статистика */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(52, 152, 219, 0.2);
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-item:hover {
+        background: rgba(52, 152, 219, 0.1);
+        border-color: rgba(52, 152, 219, 0.4);
+        transform: translateY(-2px);
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #3498db;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    /* Адаптивность */
+    @media (max-width: 1024px) {
+        .edit-container {
+            grid-template-columns: 1fr;
+        }
+        
+        .actions-column {
+            order: -1;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .edit-page {
+            padding: 1rem;
+        }
+        
+        .page-header {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+        
+        .header-content h1 {
+            font-size: 2rem;
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    /* Динамические разделы */
+    .dynamic-content {
+        display: none;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    .content-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: rgba(52, 152, 219, 0.1);
+        border: 2px solid rgba(52, 152, 219, 0.3);
+        border-radius: 16px;
+        backdrop-filter: blur(10px);
+    }
+    
+    .content-header h2 {
+        color: #ffffff;
+        font-size: 1.8rem;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .back-to-main {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        text-decoration: none;
+    }
+    
+    .back-to-main:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: translateY(-2px);
+    }
+    
+    .content-body {
+        padding: 0 1rem;
+    }
+    
+    /* Стили для управления участниками */
+    .members-list h3 {
+        color: #ffffff;
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .members-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1rem;
+    }
+    
+    .member-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(52, 152, 219, 0.3);
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+    
+    .member-card:hover {
+        background: rgba(52, 152, 219, 0.1);
+        border-color: rgba(52, 152, 219, 0.5);
+        transform: translateY(-2px);
+    }
+        
+    .member-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: rgba(52, 152, 219, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        font-size: 1.5rem;
+        overflow: hidden;
+    }
+    
+    .member-info h4 {
+        color: #ffffff;
+        margin: 0 0 0.25rem 0;
+        font-size: 1.1rem;
+    }
+    
+    .member-info p {
+        color: rgba(255, 255, 255, 0.7);
+        margin: 0;
+        font-size: 0.9rem;
+    }
+    
+    .remove-member-btn {
+        background: rgba(231, 76, 60, 0.2);
+        border: 1px solid rgba(231, 76, 60, 0.4);
+        color: #e74c3c;
+        padding: 0.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-left: auto;
+    }
+    
+    .remove-member-btn:hover {
+        background: rgba(231, 76, 60, 0.3);
+        border-color: rgba(231, 76, 60, 0.6);
+    }
+    
+    /* Стили для создания поста */
+    .post-form {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .post-options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+    .option-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .option-group label {
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+    
+    .option-group input {
+        padding: 0.75rem;
+        border: 2px solid rgba(52, 152, 219, 0.3);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        color: #ffffff;
+        font-size: 0.9rem;
+    }
+    
+    /* Стили для статистики */
+    .stats-overview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+        }
+        
+    .stat-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid rgba(52, 152, 219, 0.3);
+        border-radius: 16px;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        background: rgba(52, 152, 219, 0.1);
+        border-color: rgba(52, 152, 219, 0.5);
+        transform: translateY(-3px);
+    }
+    
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        background: rgba(52, 152, 219, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #3498db;
+        font-size: 1.5rem;
+    }
+    
+    .stat-content .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #3498db;
+        margin: 0;
+    }
+    
+    .stat-content .stat-label {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        margin: 0;
+    }
+    
+    .activity-chart {
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid rgba(52, 152, 219, 0.3);
+        border-radius: 16px;
+        padding: 2rem;
+        text-align: center;
+        }
+        
+    .activity-chart h3 {
+        color: #ffffff;
+        margin-bottom: 1rem;
+    }
+    
+    .chart-placeholder {
+        color: rgba(255, 255, 255, 0.6);
+        font-style: italic;
+        padding: 2rem;
+    }
+    
+    /* Стили для настроек дизайна */
+    .design-options {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .color-schemes,
+    .font-size-options {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .color-option,
+    .font-option {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        padding: 1rem;
+        border: 2px solid rgba(52, 152, 219, 0.3);
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.03);
+    }
+    
+    .color-option:hover,
+    .font-option:hover {
+        border-color: rgba(52, 152, 219, 0.5);
+        background: rgba(52, 152, 219, 0.1);
+    }
+    
+    .color-option input[type="radio"]:checked + .color-preview + span,
+    .font-option input[type="radio"]:checked + span {
+        color: #3498db;
+        font-weight: 600;
+        }
+        
+        .color-option input[type="radio"],
+        .font-option input[type="radio"] {
+            display: none;
+        }
+        
+        .color-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .default-theme {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+        
+        .dark-theme {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+        }
+        
+        .light-theme {
+            background: linear-gradient(135deg, #ecf0f1, #bdc3c7);
+        }
+        
+        .color-option span:last-child,
+        .font-option span {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        
+        /* ===== СТИЛИ ДЛЯ СТЕКОВОЙ ОБЛАСТНОЙ ДИАГРАММЫ ===== */
+        
+        .activity-chart {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(52, 152, 219, 0.3);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .activity-chart h3 {
+            color: #ffffff;
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+            text-align: center;
+        }
+        
+        .chart-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+        }
+        
+        .area-chart {
+            position: relative;
+            width: 600px;
+            height: 300px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+        
+        .chart-legend {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .legend-item:hover {
+            background: rgba(52, 152, 219, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .posts-color {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+        
+        .comments-color {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        .likes-color {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+        
+        /* ===== СТИЛИ ДЛЯ ДЕТАЛЬНОЙ РАЗБИВКИ ===== */
+        
+        .activity-breakdown {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(52, 152, 219, 0.3);
+        }
+        
+        .activity-breakdown h4 {
+            color: #ffffff;
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+        
+        .breakdown-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .breakdown-day {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(52, 152, 219, 0.2);
+            border-radius: 12px;
+            padding: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .breakdown-day:hover {
+            background: rgba(52, 152, 219, 0.1);
+            border-color: rgba(52, 152, 219, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .breakdown-day h5 {
+            color: #ffffff;
+            margin: 0 0 1rem 0;
+            font-size: 1rem;
+            text-align: center;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(52, 152, 219, 0.3);
+        }
+        
+        .breakdown-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .breakdown-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.25rem 0;
+        }
+        
+        .stat-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+        }
+        
+        .stat-value {
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 8px;
+            min-width: 30px;
+            text-align: center;
+        }
+        
+        .stat-value.posts-color {
+            background: rgba(52, 152, 219, 0.2);
+            color: #3498db;
+        }
+        
+        .stat-value.comments-color {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+        
+        .stat-value.likes-color {
+            background: rgba(243, 156, 18, 0.2);
+            color: #f39c12;
+        }
+        
+        .stat-value.total-color {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+            font-weight: 700;
+        }
+</style>
+
+<script>
+    // Обработка форм
+    document.querySelectorAll('.edit-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const submitBtn = this.querySelector('.submit-btn');
+            const originalText = submitBtn.innerHTML;
+            
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Сохранение...';
+            submitBtn.disabled = true;
+            
+            // Восстанавливаем кнопку через 3 секунды
+            setTimeout(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }, 3000);
+        });
+    });
+    
+    // Предварительный просмотр аватара
+    document.getElementById('avatar').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const currentAvatar = document.querySelector('.current-avatar img');
+                if (currentAvatar) {
+                    currentAvatar.src = e.target.result;
+                } else {
+                    // Если аватара еще нет, создаем его
+                    const avatarSection = document.querySelector('.avatar-section');
+                    const newAvatar = document.createElement('div');
+                    newAvatar.className = 'current-avatar';
+                    newAvatar.innerHTML = `<img src="${e.target.result}" alt="Текущий аватар">`;
+                    avatarSection.insertBefore(newAvatar, avatarSection.querySelector('.file-input-wrapper'));
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Обработчик отправки формы с аватаром
+    document.querySelector('form[enctype="multipart/form-data"]').addEventListener('submit', function(e) {
+        const avatarInput = document.getElementById('avatar');
+        if (avatarInput.files.length > 0) {
+            // Показываем индикатор загрузки
+            const submitBtn = this.querySelector('.submit-btn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Загрузка...';
+            submitBtn.disabled = true;
+            
+            // После успешной отправки обновляем аватар
+            setTimeout(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+                
+                // Обновляем аватар на странице
+                const currentAvatar = document.querySelector('.current-avatar img');
+                if (currentAvatar && avatarInput.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        currentAvatar.src = e.target.result;
+                    };
+                    reader.readAsDataURL(avatarInput.files[0]);
+                }
+            }, 2000);
+        }
+    });
+    
+    // Анимация появления элементов
+    document.addEventListener('DOMContentLoaded', function() {
+        const elements = document.querySelectorAll('.form-card, .quick-actions, .community-stats');
+        elements.forEach((el, index) => {
+            setTimeout(() => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(20px)';
+                el.style.transition = 'all 0.6s ease';
+                
+                setTimeout(() => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }, 100);
+            }, index * 200);
+        });
+    });
+    
+    // ===== СТЕКОВАЯ ОБЛАСТНАЯ ДИАГРАММА =====
+    
+    // Функция для отрисовки стековой областной диаграммы
+    function drawAreaChart() {
+        const canvas = document.getElementById('activityAreaChart');
+        if (!canvas) {
+            console.log('Canvas не найден');
+            return;
+        }
+        
+        console.log('Начинаем отрисовку диаграммы...');
+        
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        const padding = 40;
+        const chartWidth = width - 2 * padding;
+        const chartHeight = height - 2 * padding;
+        
+        // Очищаем canvas
+        ctx.clearRect(0, 0, width, height);
+        
+        // Данные для диаграммы (активность по дням недели)
+        const data = [
+            { day: 'Пн', posts: {{ weekly_activity['Понедельник']['posts'] }}, comments: {{ weekly_activity['Понедельник']['comments'] }}, likes: {{ weekly_activity['Понедельник']['likes'] }} },
+            { day: 'Вт', posts: {{ weekly_activity['Вторник']['posts'] }}, comments: {{ weekly_activity['Вторник']['comments'] }}, likes: {{ weekly_activity['Вторник']['likes'] }} },
+            { day: 'Ср', posts: {{ weekly_activity['Среда']['posts'] }}, comments: {{ weekly_activity['Среда']['comments'] }}, likes: {{ weekly_activity['Среда']['likes'] }} },
+            { day: 'Чт', posts: {{ weekly_activity['Четверг']['posts'] }}, comments: {{ weekly_activity['Четверг']['comments'] }}, likes: {{ weekly_activity['Четверг']['likes'] }} },
+            { day: 'Пт', posts: {{ weekly_activity['Пятница']['posts'] }}, comments: {{ weekly_activity['Пятница']['comments'] }}, likes: {{ weekly_activity['Пятница']['likes'] }} },
+            { day: 'Сб', posts: {{ weekly_activity['Суббота']['posts'] }}, comments: {{ weekly_activity['Суббота']['comments'] }}, likes: {{ weekly_activity['Суббота']['likes'] }} },
+            { day: 'Вс', posts: {{ weekly_activity['Воскресенье']['posts'] }}, comments: {{ weekly_activity['Воскресенье']['comments'] }}, likes: {{ weekly_activity['Воскресенье']['likes'] }} }
+        ];
+        
+        console.log('Данные для диаграммы:', data);
+        
+        // Находим максимальное значение для масштабирования
+        const maxValue = Math.max(...data.map(d => d.posts + d.comments + d.likes));
+        const scale = maxValue > 0 ? chartHeight / maxValue : 1;
+        
+        console.log('Максимальное значение:', maxValue, 'Масштаб:', scale);
+        
+        // Рисуем сетку
+        ctx.strokeStyle = 'rgba(52, 152, 219, 0.2)';
+        ctx.lineWidth = 1;
+        
+        // Горизонтальные линии сетки
+        for (let i = 0; i <= 5; i++) {
+            const y = padding + (i * chartHeight / 5);
+            ctx.beginPath();
+            ctx.moveTo(padding, y);
+            ctx.lineTo(width - padding, y);
+            ctx.stroke();
+        }
+        
+        // Вертикальные линии сетки
+        for (let i = 0; i < data.length; i++) {
+            const x = padding + (i * chartWidth / (data.length - 1));
+            ctx.beginPath();
+            ctx.moveTo(x, padding);
+            ctx.lineTo(x, height - padding);
+            ctx.stroke();
+        }
+        
+        // Рисуем области
+        const colors = {
+            posts: '#3498db',
+            comments: '#e74c3c',
+            likes: '#f39c12'
+        };
+        
+        // Функция для рисования области
+        function drawArea(values, color, offset = 0) {
+            ctx.beginPath();
+            
+            // Начинаем с левого края
+            ctx.moveTo(padding, height - padding);
+            
+            // Рисуем верхнюю линию
+            for (let i = 0; i < data.length; i++) {
+                const x = padding + (i * chartWidth / (data.length - 1));
+                const totalValue = data[i].posts + data[i].comments + data[i].likes;
+                const y = height - padding - (totalValue * scale);
+                ctx.lineTo(x, y);
+            }
+            
+            // Замыкаем область
+            ctx.lineTo(width - padding, height - padding);
+            ctx.closePath();
+            
+            // Заполняем область
+            const gradient = ctx.createLinearGradient(0, padding, 0, height - padding);
+            gradient.addColorStop(0, color);
+            gradient.addColorStop(1, adjustBrightness(color, -50));
+            
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            // Рисуем обводку
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        // Рисуем области в правильном порядке (снизу вверх)
+        drawArea(data.map(d => d.posts), colors.posts);
+        drawArea(data.map(d => d.posts + d.comments), colors.comments);
+        drawArea(data.map(d => d.posts + d.comments + d.likes), colors.likes);
+        
+        // Рисуем подписи дней недели
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.font = '14px Arial';
+        ctx.textAlign = 'center';
+        
+        for (let i = 0; i < data.length; i++) {
+            const x = padding + (i * chartWidth / (data.length - 1));
+            const y = height - padding + 20;
+            ctx.fillText(data[i].day, x, y);
+        }
+        
+        // Рисуем значения на областях
+        ctx.font = '12px Arial';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        
+        for (let i = 0; i < data.length; i++) {
+            const x = padding + (i * chartWidth / (data.length - 1));
+            
+            // Посты
+            if (data[i].posts > 0) {
+                const y = height - padding - (data[i].posts * scale / 2);
+                ctx.fillText(data[i].posts.toString(), x, y);
+            }
+            
+            // Комментарии
+            if (data[i].comments > 0) {
+                const y = height - padding - (data[i].posts * scale) - (data[i].comments * scale / 2);
+                ctx.fillText(data[i].comments.toString(), x, y);
+            }
+            
+            // Лайки
+            if (data[i].likes > 0) {
+                const y = height - padding - (data[i].posts * scale) - (data[i].comments * scale) - (data[i].likes * scale / 2);
+                ctx.fillText(data[i].likes.toString(), x, y);
+            }
+        }
+        
+        console.log('Диаграмма отрисована!');
+    }
+    
+    // Функция для изменения яркости цвета
+    function adjustBrightness(hex, percent) {
+        const num = parseInt(hex.replace('#', ''), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = (num >> 16) + amt;
+        const G = (num >> 8 & 0x00FF) + amt;
+        const B = (num & 0x0000FF) + amt;
+        return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+            (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+            (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+    }
+    
+    // Функции для управления динамическими разделами
+    function showSection(sectionName) {
+        // Скрываем основной контент
+        const mainContent = document.querySelector('.edit-container');
+        mainContent.style.display = 'none';
+        
+        // Скрываем все динамические разделы
+        hideAllDynamicContent();
+        
+        // Показываем нужный раздел
+        const sectionId = sectionName + '-content';
+        const section = document.getElementById(sectionId);
+        
+        if (section) {
+            section.style.display = 'block';
+            
+            // Если показываем статистику, отрисовываем диаграмму
+            if (sectionName === 'stats') {
+                setTimeout(() => {
+                    drawAreaChart();
+                }, 100);
+            }
+        }
+    }
+    
+    function showMainContent() {
+        // Скрываем все динамические разделы
+        hideAllDynamicContent();
+        
+        // Показываем основной контент
+        const mainContent = document.querySelector('.edit-container');
+        mainContent.style.display = 'grid';
+    }
+    
+    function hideAllDynamicContent() {
+        const sections = document.querySelectorAll('.dynamic-content');
+        sections.forEach(section => {
+            section.style.display = 'none';
+        });
+    }
+    
+    // Удаление участника
+    function removeMember(userId) {
+        if (confirm('Вы уверены, что хотите удалить этого участника из сообщества?')) {
+            // Здесь будет AJAX запрос для удаления участника
+            fetch(`/remove_member/1/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Обновляем страницу или удаляем элемент из DOM
+                    location.reload();
+                } else {
+                    alert('Ошибка при удалении участника: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                alert('Произошла ошибка при удалении участника');
+            });
+        }
+    }
+    
+    // Сохранение настроек комментариев
+    function saveCommentSettings() {
+        const commentsEnabled = document.getElementById('comments-enabled').checked;
+        const profanityFilter = document.getElementById('profanity-filter').checked;
+        const hostileFilter = document.getElementById('hostile-filter').checked;
+        const keywordFilter = document.getElementById('keyword-filter').checked;
+        const bannedKeywords = document.getElementById('banned-keywords').value;
+        
+        // Здесь будет AJAX запрос для сохранения настроек
+        fetch('/save_comment_settings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                commentsEnabled: commentsEnabled,
+                profanityFilter: profanityFilter,
+                hostileFilter: hostileFilter,
+                keywordFilter: keywordFilter,
+                bannedKeywords: bannedKeywords
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Настройки комментариев сохранены!');
+            } else {
+                alert('Ошибка при сохранении настроек: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            alert('Произошла ошибка при сохранении настроек');
+        });
+    }
+    
+    // Получаем ID сообщества из URL (пока используем статичное значение)
+    const communityId = '1';
+    
+    // Обновление текста кнопки при выборе файла аватара
+    document.addEventListener('DOMContentLoaded', function() {
+        const avatarInput = document.getElementById('avatar');
+        
+        if (avatarInput) {
+            avatarInput.addEventListener('change', function() {
+                const label = this.nextElementSibling;
+                if (this.files.length > 0) {
+                    label.textContent = this.files[0].name;
+                } else {
+                    label.textContent = 'Выберите аватар';
+                }
+            });
+        }
+        
+        // Обработчик для основного переключателя комментариев
+        const commentsEnabled = document.getElementById('comments-enabled');
+        if (commentsEnabled) {
+            // Показываем фильтры сразу, если комментарии уже включены
+            const filtersSection = document.getElementById('filters-section');
+            if (commentsEnabled.checked) {
+                filtersSection.style.display = 'block';
+            }
+            
+            commentsEnabled.addEventListener('change', function() {
+                if (this.checked) {
+                    filtersSection.style.display = 'block';
+                } else {
+                    filtersSection.style.display = 'none';
+                }
+            });
+        }
+        
+        // Обработчик для фильтра ключевых слов
+        const keywordFilter = document.getElementById('keyword-filter');
+        if (keywordFilter) {
+            // Показываем настройки ключевых слов сразу, если фильтр уже включен
+            const keywordsSettings = document.getElementById('keywords-settings');
+            if (keywordFilter.checked) {
+                keywordsSettings.style.display = 'block';
+            }
+            
+            keywordFilter.addEventListener('change', function() {
+                if (this.checked) {
+                    keywordsSettings.style.display = 'block';
+                } else {
+                    keywordsSettings.style.display = 'none';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

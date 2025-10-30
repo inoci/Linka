@@ -11,7 +11,7 @@
             padding: 0;
             box-sizing: border-box;
         }
-
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
@@ -19,7 +19,7 @@
             min-height: 100vh;
             overflow-x: hidden;
         }
-
+        
         /* Навигация */
         .navbar {
             background: rgba(0, 0, 0, 0.9);
@@ -47,7 +47,7 @@
             gap: 2rem;
             align-items: center;
         }
-
+        
         .nav-link {
             color: #ffffff;
             text-decoration: none;
@@ -99,6 +99,517 @@
             transform: translateX(0);
         }
 
+        /* Стили для кнопки выбора файла */
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            margin: 10px 0;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: -9999px;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #3498db 0%, #2ecc71 100%);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .file-input-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.6);
+        }
+
+        .file-input-label:active {
+            transform: translateY(0);
+        }
+
+        /* Стили для списков */
+        ul, ol {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        ul li, ol li {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        ul li:last-child, ol li:last-child {
+            border-bottom: none;
+        }
+
+        ul li:hover, ol li:hover {
+            background: rgba(52, 152, 219, 0.1);
+            padding-left: 10px;
+        }
+
+        /* Списки с маркерами */
+        ul.list-marked, ol.list-marked {
+            list-style: disc;
+            padding-left: 20px;
+        }
+
+        ul.list-marked li, ol.list-marked li {
+            border-bottom: none;
+            padding: 5px 0;
+        }
+
+        ul.list-marked li:hover, ol.list-marked li:hover {
+            background: none;
+            padding-left: 0;
+            color: #3498db;
+        }
+
+        /* Списки навигации */
+        .nav-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .nav-list li {
+            border-bottom: none;
+            padding: 0;
+        }
+
+        .nav-list li a {
+            display: block;
+            padding: 12px 16px;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            margin: 4px 0;
+        }
+
+        .nav-list li a:hover {
+            background: rgba(52, 152, 219, 0.2);
+            color: #3498db;
+            transform: translateX(5px);
+        }
+
+        /* Списки действий */
+        .action-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .action-list li {
+            border-bottom: none;
+            padding: 0;
+            margin-bottom: 8px;
+        }
+
+        .action-list li button {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .action-list li button:hover {
+            background: rgba(52, 152, 219, 0.2);
+            border-color: #3498db;
+            transform: translateY(-2px);
+        }
+
+        /* Списки настроек */
+        .settings-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .settings-list li {
+            border-bottom: none;
+            padding: 0;
+            margin-bottom: 12px;
+        }
+
+        .settings-list li label {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .settings-list li label:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .settings-list li input[type="radio"],
+        .settings-list li input[type="checkbox"] {
+            margin-right: 12px;
+            transform: scale(1.2);
+        }
+
+        /* Списки уведомлений */
+        .notification-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .notification-list li {
+            border-bottom: none;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            transition: all 0.3s ease;
+        }
+
+        .notification-list li:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        /* Списки с иконками */
+        .icon-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .icon-list li {
+            border-bottom: none;
+            padding: 0;
+            margin-bottom: 8px;
+        }
+
+        .icon-list li i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+            color: #3498db;
+        }
+
+        /* Адаптивность для списков */
+        @media (max-width: 768px) {
+            ul li, ol li {
+                padding: 10px 0;
+            }
+            
+            .nav-list li a {
+                padding: 16px 20px;
+            }
+            
+            .action-list li button {
+                padding: 16px 20px;
+            }
+        }
+
+        /* Стили для выпадающих списков (select) */
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            transition: all 0.3s ease;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+
+        /* Стили для select с placeholder */
+        select:invalid,
+        select option[value=""]:checked {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        select:valid {
+            color: #ffffff;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+            background-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        select:hover {
+            border-color: rgba(255, 255, 255, 0.4);
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Стили для опций в select */
+        select option {
+            background: #2c3e50;
+            color: #ffffff;
+            padding: 12px 16px;
+            border: none;
+        }
+
+        select option:hover {
+            background: #3498db;
+        }
+
+        select option:checked {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+        }
+        
+        /* Стили для placeholder опций */
+        select option[value=""] {
+            background: #34495e;
+            color: rgba(255, 255, 255, 0.7);
+            font-style: italic;
+        }
+
+        select option[value=""]:hover {
+            background: #3498db;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* Стили для select с иконками */
+        select.select-with-icon {
+            padding-left: 40px;
+            background-position: left 12px center, right 12px center;
+        }
+
+        /* Адаптивность для select */
+        @media (max-width: 768px) {
+            select {
+                padding: 16px 20px;
+                font-size: 18px;
+            }
+        }
+
+        /* Стили для аватаров */
+        .current-avatar {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .current-avatar img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            object-fit: cover;
+            transition: all 0.3s ease;
+        }
+
+        .current-avatar img:hover {
+            border-color: #3498db;
+            transform: scale(1.05);
+        }
+
+        .avatar-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Анимация загрузки */
+        .fa-spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Стили для настроек комментариев */
+        .main-toggle {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .main-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .toggle-slider {
+            width: 50px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .main-toggle input:checked + .toggle-slider {
+            background: #3498db;
+        }
+
+        .toggle-slider::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .main-toggle input:checked + .toggle-slider::after {
+            transform: translateX(26px);
+        }
+
+        .main-toggle input {
+            display: none;
+        }
+
+        .toggle-label {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .option-description {
+            margin-top: 8px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            font-style: italic;
+        }
+
+        .filters-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .filters-section h3 {
+            margin-bottom: 20px;
+            color: #3498db;
+            font-size: 18px;
+        }
+
+        .filter-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .checkbox-custom {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .filter-option input:checked + .checkbox-custom {
+            background: #3498db;
+            border-color: #3498db;
+        }
+
+        .filter-option input:checked + .checkbox-custom::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .filter-option input {
+            display: none;
+        }
+
+        .filter-description {
+            margin-top: 8px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+            margin-left: 32px;
+        }
+
+        .keywords-settings {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .keywords-settings h4 {
+            margin-bottom: 15px;
+            color: #3498db;
+            font-size: 16px;
+        }
+
+        .keywords-input textarea {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            resize: vertical;
+        }
+
+        .keywords-input textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .input-hint {
+            margin-top: 8px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            font-style: italic;
+        }
+
         .sidebar-toggle {
             background: none;
             border: none;
@@ -141,7 +652,7 @@
             width: 20px;
             text-align: center;
         }
-
+        
         /* Основной контент */
         .main-content {
             margin-left: 0;
@@ -169,12 +680,12 @@
             transform: translateY(-5px);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
-
+        
         /* Формы */
         .form-group {
             margin-bottom: 1.5rem;
         }
-
+        
         .form-control {
             width: 100%;
             padding: 1rem;
@@ -185,7 +696,7 @@
             font-size: 1rem;
             transition: all 0.3s ease;
         }
-
+        
         .form-control:focus {
             outline: none;
             border-color: #3498db;
@@ -233,7 +744,7 @@
             background: linear-gradient(45deg, #f39c12, #e67e22);
             color: white;
         }
-
+        
         /* Посты */
         .post-header {
             display: flex;
@@ -241,7 +752,7 @@
             gap: 1rem;
             margin-bottom: 1rem;
         }
-
+        
         .post-avatar {
             width: 50px;
             height: 50px;
@@ -254,23 +765,23 @@
             color: white;
             font-size: 1.2rem;
         }
-
+        
         .post-user-info h4 {
             color: #ffffff;
             margin-bottom: 0.25rem;
         }
-
+        
         .post-time {
             color: rgba(255, 255, 255, 0.6);
             font-size: 0.9rem;
         }
-
+        
         .post-content {
             margin-bottom: 1.5rem;
             line-height: 1.6;
             font-size: 1.1rem;
         }
-
+        
         .post-actions {
             display: flex;
             gap: 1rem;
@@ -278,7 +789,7 @@
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             padding-top: 1rem;
         }
-
+        
         .action-btn {
             background: none;
             border: none;
@@ -344,7 +855,7 @@
         .comment-form {
             margin-top: 1rem;
         }
-
+        
         .comment-input {
             width: 100%;
             padding: 0.75rem;
@@ -400,21 +911,21 @@
                 opacity: 1;
             }
         }
-
+        
         /* Скроллбар */
         ::-webkit-scrollbar {
             width: 8px;
         }
-
+        
         ::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.1);
         }
-
+        
         ::-webkit-scrollbar-thumb {
             background: rgba(52, 152, 219, 0.5);
             border-radius: 4px;
         }
-
+        
         ::-webkit-scrollbar-thumb:hover {
             background: rgba(52, 152, 219, 0.7);
         }
@@ -443,7 +954,7 @@
             }
         }
 
-        /* Убираем подчеркивания у всех ссылок */
+                /* Убираем подчеркивания у всех ссылок */
         a {
             text-decoration: none;
         }
@@ -461,7 +972,7 @@
                 <i class="fas fa-bars"></i>
             </button>
             
-            {% if session.user_id %}
+                    {% if session.user_id %}
             <div class="user-info">
                 <div class="user-avatar">
                     {{ session.username[0].upper() }}
@@ -471,12 +982,12 @@
                     <i class="fas fa-sign-out-alt"></i> Выход
                 </a>
             </div>
-            {% else %}
+                    {% else %}
             <a href="{{ url_for('login') }}" class="nav-link">
                 <i class="fas fa-sign-in-alt"></i> Вход
             </a>
-            {% endif %}
-        </div>
+                    {% endif %}
+                </div>
     </nav>
 
     <!-- Боковое меню -->
@@ -484,9 +995,9 @@
     <div class="sidebar" id="sidebar">
         <nav class="sidebar-nav">
             <div class="sidebar-item">
-                <a href="{{ url_for('index') }}" class="sidebar-link">
+                <a href="{{ url_for('feed') }}" class="sidebar-link">
                     <i class="fas fa-home"></i>
-                    <span>Лента</span>
+                    <span>Главная</span>
                 </a>
             </div>
             <div class="sidebar-item">
@@ -501,7 +1012,13 @@
                     <span>Реклама</span>
                 </a>
             </div>
-        </nav>
+            <div class="sidebar-item">
+                <a href="{{ url_for('communities') }}" class="sidebar-link">
+                    <i class="fas fa-users"></i>
+                    <span>Сообщества</span>
+                </a>
+        </div>
+    </nav>
     </div>
     {% endif %}
 
@@ -512,15 +1029,15 @@
 
     <!-- Flash сообщения -->
     <div class="flash-messages">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                        {% for category, message in messages %}
                     <div class="flash-message {{ category }}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                {% endif %}
+            {% endwith %}
     </div>
 
     <!-- Google AdSense -->
@@ -542,7 +1059,7 @@
         setTimeout(() => {
             const flashMessages = document.querySelectorAll('.flash-message');
             flashMessages.forEach(message => {
-                message.style.opacity = '0';
+                    message.style.opacity = '0';
                 setTimeout(() => message.remove(), 300);
             });
         }, 3000);
