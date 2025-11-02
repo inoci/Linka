@@ -12,8 +12,12 @@
         <div class="create-post-section">
             <div class="create-post-card">
                 <div class="create-post-header">
-                    <div class="user-avatar-large">
-                        {{ session.username[0].upper() }}
+            <div class="user-avatar-large">
+                        {% if session.get('avatar') %}
+                            <img src="{{ url_for('static', filename=session.get('avatar')) }}" alt="Аватар" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                        {% else %}
+                            {{ session.username[0].upper() }}
+                        {% endif %}
                     </div>
                     <div class="create-post-info">
                         <h3>Что у вас нового, {{ session.username }}?</h3>
@@ -255,8 +259,10 @@
                         
         <div class="post-header">
                             <div class="post-user-info">
-            <div class="post-avatar">
-                                    {% if post.user and post.user.username %}
+                                <div class="post-avatar">
+                                    {% if post.user and post.user.avatar %}
+                                        <img src="{{ url_for('static', filename=post.user.avatar) }}" alt="Аватар {{ post.user.username }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                                    {% elif post.user and post.user.username %}
                                         {{ post.user.username[0].upper() }}
                                     {% else %}
                                         ?
@@ -390,33 +396,7 @@
                             </button>
                         </div>
                         
-                        <!-- Реакции -->
-                        <div class="reactions-container">
-                            <button class="reaction-btn" onclick="addReaction({{ post.id }}, 'like')" data-reaction="like">
-                                <i class="far fa-heart"></i>
-                                <span class="reaction-count" id="like-count-{{ post.id }}">{{ post.reactions.like if post.reactions and post.reactions.like else 0 }}</span>
-                            </button>
-                            <button class="reaction-btn" onclick="addReaction({{ post.id }}, 'laugh')" data-reaction="laugh">
-                                <i class="far fa-laugh"></i>
-                                <span class="reaction-count" id="laugh-count-{{ post.id }}">{{ post.reactions.laugh if post.reactions and post.reactions.laugh else 0 }}</span>
-                            </button>
-                            <button class="reaction-btn" onclick="addReaction({{ post.id }}, 'surprise')" data-reaction="surprise">
-                                <i class="far fa-surprise"></i>
-                                <span class="reaction-count" id="surprise-count-{{ post.id }}">{{ post.reactions.surprise if post.reactions and post.reactions.surprise else 0 }}</span>
-                            </button>
-                            <button class="reaction-btn" onclick="addReaction({{ post.id }}, 'sad')" data-reaction="sad">
-                                <i class="far fa-sad-tear"></i>
-                                <span class="reaction-count" id="sad-count-{{ post.id }}">{{ post.reactions.sad if post.reactions and post.reactions.sad else 0 }}</span>
-                            </button>
-                            <button class="reaction-btn" onclick="addReaction({{ post.id }}, 'love')" data-reaction="love">
-                                <i class="far fa-heart"></i>
-                                <span class="reaction-count" id="love-count-{{ post.id }}">{{ post.reactions.love if post.reactions and post.reactions.love else 0 }}</span>
-                            </button>
-                            <button class="reaction-btn" onclick="addReaction({{ post.id }}, 'angry')" data-reaction="angry">
-                                <i class="far fa-angry"></i>
-                                <span class="reaction-count" id="angry-count-{{ post.id }}">{{ post.reactions.angry if post.reactions and post.reactions.angry else 0 }}</span>
-                            </button>
-                        </div>
+                        
                         
                         <!-- Секция комментариев -->
                         <div class="comments-section" id="comments-{{ post.id }}" style="display: none;">
@@ -497,7 +477,7 @@
                             <h4><i class="fas fa-user-friends"></i> Рекомендации для подписки</h4>
                         </div>
                         <div class="suggestions-grid">
-                            {% for u in suggested_users[:6] %}
+                            {% for u in suggested_users %}
                             <div class="suggestion-item">
                                 <a href="{{ url_for('profile', username=u.username) }}" class="suggest-user">
                                     <div class="suggest-avatar">
@@ -2073,30 +2053,40 @@
     /* Изображения в постах */
     .post-image {
         margin: 1rem 0;
-        border-radius: 12px;
+        border-radius: 8px;
         overflow: hidden;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        background: #ffffff;
     }
     
     .post-image-content {
         width: 100%;
-        max-height: 400px;
-        object-fit: cover;
+        max-height: 600px;
+        object-fit: contain;
         display: block;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+    
+    .post-image-content:hover {
+        transform: scale(1.02);
     }
     
     /* Видео в постах */
     .post-video {
         margin: 1rem 0;
-        border-radius: 12px;
+        border-radius: 8px;
         overflow: hidden;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        background: #000000;
     }
     
     .post-video video {
         width: 100%;
-        max-height: 400px;
-        object-fit: cover;
+        max-height: 600px;
+        object-fit: contain;
         display: block;
     }
     

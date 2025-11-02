@@ -616,13 +616,13 @@ def feed():
     # Получаем лайкнутые посты пользователя (только для обычных постов)
     user_liked_posts = [post.id for post in posts if post.post_type == 'regular' and post.id in [like.post_id for like in Like.query.filter_by(user_id=session['user_id']).all()]]
 
-    # Предложения для подписки: пользователи, на которых еще не подписан текущий
+    # Предложения для подписки: пользователи, на которых еще не подписан текущий (3 случайных)
     followed_subq = db.session.query(Follow.following_id).filter(Follow.follower_id == session['user_id'])
     suggested_users = (User.query
                         .filter(User.id != session['user_id'])
                         .filter(~User.id.in_(followed_subq))
-                        .order_by(User.created_at.desc())
-                        .limit(12)
+                        .order_by(db.func.random())
+                        .limit(3)
                         .all())
     
     return render_template('feed.html', posts=posts, user_liked_posts=user_liked_posts, suggested_users=suggested_users)
@@ -645,6 +645,7 @@ def login():
             session['user_id'] = user.id
             session['username'] = user.username
             session.permanent = True
+            session['avatar'] = user.avatar
             flash('Успешный вход!', 'success')
             return redirect(url_for('feed'))
         elif not user:
@@ -665,6 +666,7 @@ def login():
                 session['user_id'] = user.id
                 session['username'] = user.username
                 session.permanent = True
+                session['avatar'] = user.avatar
                 print(f"Создан новый пользователь: {username} с ID: {user.id}")
                 return redirect(url_for('feed'))
             else:
@@ -689,6 +691,7 @@ def login():
                 session['user_id'] = user.id
                 session['username'] = user.username
                 session.permanent = True
+                session['avatar'] = user.avatar
                 print(f"Создан новый пользователь (пароль неверный): {new_username} с ID: {user.id}")
                 return redirect(url_for('feed'))
             else:
@@ -715,8 +718,12 @@ def create_post():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    content = request.form['content']
-    if content.strip():
+    try:
+        content = request.form.get('content', '').strip()
+        if not content:
+            flash('Пост не может быть пустым', 'error')
+            return redirect(url_for('feed'))
+        
         # Получаем медиа данные из формы
         emoji = request.form.get('emoji', '')
         location = request.form.get('location', '')
@@ -730,18 +737,31 @@ def create_post():
         if 'image' in request.files:
             image_file = request.files['image']
             if image_file and image_file.filename:
-                if allowed_file(image_file.filename):
+                if not allowed_file(image_file.filename):
+                    flash('Неподдерживаемый формат изображения. Разрешены: PNG, JPG, JPEG, GIF', 'error')
+                    return redirect(url_for('feed'))
+                
+                try:
                     # Создаем папку для изображений если её нет
                     if not os.path.exists(UPLOAD_FOLDER):
                         os.makedirs(UPLOAD_FOLDER)
                     
                     # Генерируем уникальное имя файла
                     filename = f"{session['user_id']}_{int(time.time())}_{secure_filename(image_file.filename)}"
-                    image_path = os.path.join(UPLOAD_FOLDER, filename)
-                    image_file.save(image_path)
+                    filepath = os.path.join(UPLOAD_FOLDER, filename)
+                    
+                    # Сохраняем файл
+                    image_file.save(filepath)
+                    
+                    # Проверяем, что файл действительно сохранился
+                    if not os.path.exists(filepath):
+                        flash('Ошибка при сохранении изображения', 'error')
+                        return redirect(url_for('feed'))
+                    
                     image_path = f"uploads/{filename}"  # Относительный путь для HTML
-                else:
-                    flash('Неподдерживаемый формат файла', 'error')
+                except Exception as e:
+                    print(f"Ошибка при сохранении изображения: {str(e)}")
+                    flash('Ошибка при загрузке изображения. Попробуйте еще раз.', 'error')
                     return redirect(url_for('feed'))
         
         # Обработка видео
@@ -749,49 +769,84 @@ def create_post():
         if 'video' in request.files:
             video_file = request.files['video']
             if video_file and video_file.filename:
-                if allowed_file(video_file.filename):
+                if not allowed_file(video_file.filename):
+                    flash('Неподдерживаемый формат видео. Разрешены: MP4, WEBM, MOV', 'error')
+                    return redirect(url_for('feed'))
+                
+                try:
+                    # Создаем папку для видео если её нет
                     if not os.path.exists(UPLOAD_FOLDER):
                         os.makedirs(UPLOAD_FOLDER)
                     
                     filename = f"{session['user_id']}_{int(time.time())}_{secure_filename(video_file.filename)}"
-                    video_path = os.path.join(UPLOAD_FOLDER, filename)
-                    video_file.save(video_path)
+                    filepath = os.path.join(UPLOAD_FOLDER, filename)
+                    
+                    # Сохраняем файл
+                    video_file.save(filepath)
+                    
+                    # Проверяем, что файл действительно сохранился
+                    if not os.path.exists(filepath):
+                        flash('Ошибка при сохранении видео', 'error')
+                        return redirect(url_for('feed'))
+                    
                     video_path = f"uploads/{filename}"
-                else:
-                    flash('Неподдерживаемый формат видео', 'error')
+                except Exception as e:
+                    print(f"Ошибка при сохранении видео: {str(e)}")
+                    flash('Ошибка при загрузке видео. Попробуйте еще раз.', 'error')
                     return redirect(url_for('feed'))
         
         # Проверяем, создается ли пост в сообществе
         community_id = request.form.get('community_id')
+        if community_id:
+            try:
+                community_id = int(community_id)
+            except (ValueError, TypeError):
+                community_id = None
         
-        post = Post(
-            content=content,
-            image=image_path,
-            video=video_path,
-            emoji=emoji,
-            location=location,
-            location_name=location_name,
-            visibility=visibility,
-            category=category,
-            tags=tags,
-            user_id=session['user_id'],
-            community_id=community_id if community_id else None
-        )
-        db.session.add(post)
-        db.session.commit()
-        
-        # Обновляем счетчики использования тегов
-        if tags:
-            for tag_name in [tag.strip() for tag in tags.split(',')]:
-                tag = Tag.query.filter_by(name=tag_name).first()
-                if tag:
-                    tag.usage_count += 1
-                else:
-                    new_tag = Tag(name=tag_name, usage_count=1)
-                    db.session.add(new_tag)
-        
-        db.session.commit()
-        flash('Пост опубликован!', 'success')
+        # Создаем пост
+        try:
+            post = Post(
+                content=content,
+                image=image_path,
+                video=video_path,
+                emoji=emoji,
+                location=location,
+                location_name=location_name,
+                visibility=visibility,
+                category=category,
+                tags=tags,
+                user_id=session['user_id'],
+                community_id=community_id
+            )
+            db.session.add(post)
+            db.session.commit()
+            
+            # Обновляем счетчики использования тегов
+            if tags:
+                try:
+                    for tag_name in [tag.strip() for tag in tags.split(',')]:
+                        if tag_name:  # Проверяем, что тег не пустой
+                            tag = Tag.query.filter_by(name=tag_name).first()
+                            if tag:
+                                tag.usage_count += 1
+                            else:
+                                new_tag = Tag(name=tag_name, usage_count=1)
+                                db.session.add(new_tag)
+                    db.session.commit()
+                except Exception as e:
+                    print(f"Ошибка при обновлении тегов: {str(e)}")
+                    # Не критичная ошибка, продолжаем
+            
+            flash('Пост опубликован!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            print(f"Ошибка при создании поста: {str(e)}")
+            flash('Ошибка при публикации поста. Попробуйте еще раз.', 'error')
+            return redirect(url_for('feed'))
+    
+    except Exception as e:
+        print(f"Критическая ошибка при создании поста: {str(e)}")
+        flash('Произошла ошибка при публикации поста. Попробуйте еще раз.', 'error')
     
     return redirect(url_for('feed'))
 
@@ -916,16 +971,20 @@ def add_reaction(post_id):
 # Сброс кулдауна пользователя
 @app.route('/api/reset-cooldown', methods=['POST'])
 def reset_cooldown():
-    if 'user_id' not in session:
-        return jsonify({'error': 'Unauthorized'}), 401
-    
-    user = User.query.get(session['user_id'])
-    if user:
-        user.like_cooldown = None
-        db.session.commit()
-        return jsonify({'success': True, 'message': 'Кулдаун сброшен'})
-    
-    return jsonify({'error': 'Пользователь не найден'}), 404
+    try:
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+        
+        user = User.query.get(session['user_id'])
+        if user:
+            user.like_cooldown = None
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Кулдаун сброшен'})
+        
+        return jsonify({'success': False, 'error': 'Пользователь не найден'}), 404
+    except Exception as e:
+        print(f"Ошибка при сбросе кулдауна: {str(e)}")
+        return jsonify({'success': False, 'error': 'Ошибка сервера'}), 500
 
 # Получение настроек дизайна сообщества
 @app.route('/api/community/<int:community_id>/design_settings')
@@ -1672,7 +1731,7 @@ def profile(username):
             if like:
                 user_liked_posts.add(post.id)
     
-    # Предложения для подписки
+    # Предложения для подписки (3 случайных)
     exclude_ids = [user.id]
     if 'user_id' in session:
         exclude_ids.append(session['user_id'])
@@ -1680,14 +1739,14 @@ def profile(username):
         suggested_users = (User.query
                             .filter(~User.id.in_(followed_subq))
                             .filter(~User.id.in_(exclude_ids))
-                            .order_by(User.created_at.desc())
-                            .limit(12)
+                            .order_by(db.func.random())
+                            .limit(3)
                             .all())
     else:
         suggested_users = (User.query
                             .filter(~User.id.in_(exclude_ids))
-                            .order_by(User.created_at.desc())
-                            .limit(12)
+                            .order_by(db.func.random())
+                            .limit(3)
                             .all())
 
     return render_template('profile.html', 
@@ -1742,6 +1801,23 @@ def edit_profile(username):
         user.first_name = first_name
         user.last_name = last_name
         user.bio = bio
+
+        # Загрузка аватара (если передан)
+        if 'avatar' in request.files:
+            avatar_file = request.files['avatar']
+            if avatar_file and avatar_file.filename:
+                if allowed_file(avatar_file.filename):
+                    if not os.path.exists(UPLOAD_FOLDER):
+                        os.makedirs(UPLOAD_FOLDER)
+                    filename = f"avatar_{session['user_id']}_{int(time.time())}_{secure_filename(avatar_file.filename)}"
+                    filepath = os.path.join(UPLOAD_FOLDER, filename)
+                    avatar_file.save(filepath)
+                    # относительный путь для шаблонов
+                    user.avatar = f"uploads/{filename}"
+                    session['avatar'] = user.avatar
+                else:
+                    flash('Неподдерживаемый формат аватара', 'error')
+                    return render_template('edit_profile.html', user=user)
         
         # Обновляем сессию
         session['username'] = new_username
@@ -2069,72 +2145,108 @@ def init_db():
         print("База данных инициализирована!")
 
 def migrate_db():
-    """Миграция базы данных для добавления новых полей"""
+    """Автоматическая миграция базы данных: добавляет недостающие колонки во все таблицы"""
+    from sqlalchemy import inspect as sqla_inspect
+    from sqlalchemy.schema import CreateTable
+    from sqlalchemy.sql import sqltypes
+    
     with app.app_context():
         try:
-            # Проверяем, есть ли новые поля в таблице community
-            inspector = db.inspect(db.engine)
+            inspector = sqla_inspect(db.engine)
+            existing_tables = set(inspector.get_table_names())
             
-            # Миграция для таблицы community
-            if 'community' in inspector.get_table_names():
-                columns = [col['name'] for col in inspector.get_columns('community')]
-                
-                if 'website' not in columns:
-                    with db.engine.connect() as conn:
-                        conn.execute(db.text('ALTER TABLE community ADD COLUMN website VARCHAR(255)'))
-                        conn.commit()
-                    print("Добавлено поле 'website' в таблицу community")
-                
-                if 'phone' not in columns:
-                    with db.engine.connect() as conn:
-                        conn.execute(db.text('ALTER TABLE community ADD COLUMN phone VARCHAR(20)'))
-                        conn.commit()
-                    print("Добавлено поле 'phone' в таблицу community")
-                
-                if 'city' not in columns:
-                    with db.engine.connect() as conn:
-                        conn.execute(db.text('ALTER TABLE community ADD COLUMN city VARCHAR(100)'))
-                        conn.commit()
-                    print("Добавлено поле 'city' в таблицу community")
-                
-                # Добавляем новые поля для дизайна
-                if 'color_scheme' not in columns:
-                    with db.engine.connect() as conn:
-                        conn.execute(db.text('ALTER TABLE community ADD COLUMN color_scheme VARCHAR(50) DEFAULT "default"'))
-                        conn.commit()
-                    print("Добавлено поле 'color_scheme' в таблицу community")
-                
-                if 'font_size' not in columns:
-                    with db.engine.connect() as conn:
-                        conn.execute(db.text('ALTER TABLE community ADD COLUMN font_size VARCHAR(20) DEFAULT "medium"'))
-                        conn.commit()
-                    print("Добавлено поле 'font_size' в таблицу community")
-                
-                if 'theme' not in columns:
-                    with db.engine.connect() as conn:
-                        conn.execute(db.text('ALTER TABLE community ADD COLUMN theme VARCHAR(50) DEFAULT "light"'))
-                        conn.commit()
-                    print("Добавлено поле 'theme' в таблицу community")
-                
-                if 'custom_css' not in columns:
-                    with db.engine.connect() as conn:
-                        conn.execute(db.text('ALTER TABLE community ADD COLUMN custom_css TEXT'))
-                        conn.commit()
-                    print("Добавлено поле 'custom_css' в таблицу community")
+            # Функция для преобразования типа SQLAlchemy в SQL тип для SQLite
+            def sqlalchemy_to_sqlite_type(col_type):
+                """Преобразует тип SQLAlchemy в SQL тип для SQLite"""
+                if isinstance(col_type, sqltypes.String):
+                    length = getattr(col_type, 'length', None)
+                    if length:
+                        return f"VARCHAR({length})"
+                    return "TEXT"
+                elif isinstance(col_type, sqltypes.Text):
+                    return "TEXT"
+                elif isinstance(col_type, sqltypes.Integer):
+                    return "INTEGER"
+                elif isinstance(col_type, sqltypes.Boolean):
+                    return "INTEGER"  # SQLite использует INTEGER для BOOLEAN
+                elif isinstance(col_type, sqltypes.DateTime):
+                    return "DATETIME"
+                elif isinstance(col_type, sqltypes.Float):
+                    return "REAL"
+                else:
+                    return "TEXT"  # По умолчанию TEXT
             
-            # Миграция для таблицы post
-            if 'post' in inspector.get_table_names():
-                columns = [col['name'] for col in inspector.get_columns('post')]
-                
-                if 'community_id' not in columns:
-                    with db.engine.connect() as conn:
-                        conn.execute(db.text('ALTER TABLE post ADD COLUMN community_id INTEGER REFERENCES community(id) ON DELETE CASCADE'))
-                        conn.commit()
-                    print("Добавлено поле 'community_id' в таблицу post")
+            # Функция для получения значения по умолчанию
+            def get_default_value(column):
+                """Получает значение по умолчанию для колонки"""
+                if column.default is not None:
+                    if hasattr(column.default, 'arg'):
+                        default_val = column.default.arg
+                        if isinstance(default_val, (str, int, float, bool)):
+                            if isinstance(default_val, bool):
+                                return 1 if default_val else 0
+                            return default_val
+                        elif callable(default_val):
+                            # Для функций по умолчанию (например, datetime.utcnow)
+                            return None
+                return None
             
-            print("Миграция завершена!")
+            # Получаем все модели из метаданных
+            metadata = db.Model.metadata
+            models_added = 0
+            columns_added = 0
+            
+            # Создаем все отсутствующие таблицы
+            for table_name, table in metadata.tables.items():
+                if table_name not in existing_tables:
+                    # Таблица не существует, создаем её
+                    db.create_all(tables=[table])
+                    print(f"Создана таблица: {table_name}")
+                    models_added += 1
+                else:
+                    # Таблица существует, проверяем колонки
+                    existing_columns = {col['name']: col for col in inspector.get_columns(table_name)}
+                    
+                    for column in table.columns:
+                        col_name = column.name
+                        
+                        # Пропускаем первичные ключи и внешние ключи (они уже должны быть)
+                        if column.primary_key:
+                            continue
+                        
+                        if col_name not in existing_columns:
+                            # Колонка отсутствует, добавляем её
+                            try:
+                                sql_type = sqlalchemy_to_sqlite_type(column.type)
+                                default_val = get_default_value(column)
+                                
+                                alter_sql = f'ALTER TABLE {table_name} ADD COLUMN {col_name} {sql_type}'
+                                
+                                if default_val is not None:
+                                    if isinstance(default_val, str):
+                                        alter_sql += f" DEFAULT '{default_val}'"
+                                    else:
+                                        alter_sql += f" DEFAULT {default_val}"
+                                
+                                with db.engine.connect() as conn:
+                                    conn.execute(db.text(alter_sql))
+                                    conn.commit()
+                                
+                                print(f"Добавлено поле '{col_name}' в таблицу '{table_name}'")
+                                columns_added += 1
+                            except Exception as col_error:
+                                print(f"Ошибка при добавлении колонки '{col_name}' в таблицу '{table_name}': {col_error}")
+                                # Продолжаем миграцию других колонок
+            
+            if models_added == 0 and columns_added == 0:
+                print("База данных уже актуальна, миграция не требуется.")
+            else:
+                print(f"Миграция завершена! Создано таблиц: {models_added}, Добавлено колонок: {columns_added}")
+                
         except Exception as e:
             print(f"Ошибка при миграции: {e}")
+            import traceback
+            traceback.print_exc()
             print("Попробуйте пересоздать базу данных")
 
 # ===== МАРШРУТЫ ДЛЯ СООБЩЕСТВ =====
