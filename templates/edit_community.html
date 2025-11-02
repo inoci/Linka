@@ -20,10 +20,16 @@
 
     <!-- Основной контент -->
     <div class="edit-container">
+        <aside class="edit-sidebar">
+            <nav class="edit-menu">
+                <a href="#section-basic" class="menu-link active"><i class="fas fa-info-circle"></i> Основная информация</a>
+                <a href="#section-advanced" class="menu-link"><i class="fas fa-cog"></i> Дополнительные настройки</a>
+            </nav>
+        </aside>
         <!-- Левая колонка - формы -->
         <div class="forms-column">
             <!-- Основная информация -->
-            <div class="form-card">
+            <div class="form-card" id="section-basic">
                 <div class="card-header">
                     <i class="fas fa-info-circle"></i>
                     <h3>Основная информация</h3>
@@ -83,7 +89,7 @@
             </div>
             
             <!-- Дополнительная информация -->
-            <div class="form-card">
+            <div class="form-card" id="section-advanced">
                 <div class="card-header">
                     <i class="fas fa-cog"></i>
                     <h3>Дополнительные настройки</h3>
@@ -175,7 +181,7 @@
                                 <p>{{ member.role }}</p>
                             </div>
                             {% if member.role != 'admin' and community.creator_id == session['user_id'] %}
-                            <button class="remove-member-btn" onclick="removeMember({{ member.user.id }})">
+                            <button class="remove-member-btn" data-user-id="{{ member.user.id }}">
                                 <i class="fas fa-user-minus"></i>
                             </button>
                             {% endif %}
@@ -415,13 +421,13 @@
 </div>
 
 <style>
-    /* Стилистика Линка - темная тема с синими акцентами */
+    /* Стили: светлая тема с синими акцентами */
     .edit-page {
         max-width: 1200px;
         margin: 0 auto;
         padding: 2rem;
         min-height: 100vh;
-        color: #ffffff;
+        color: #1A1A1A;
     }
     
     /* Заголовок страницы */
@@ -431,23 +437,21 @@
         align-items: center;
         margin-bottom: 3rem;
         padding: 2rem;
-        background: rgba(52, 152, 219, 0.1);
-        border: 2px solid rgba(52, 152, 219, 0.3);
-        border-radius: 20px;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 8px 32px rgba(52, 152, 219, 0.2);
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
     }
     
     .header-content h1 {
-        color: #ffffff;
+        color: #1A1A1A;
         font-size: 2.5rem;
         font-weight: 700;
         margin: 0 0 0.5rem 0;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
     }
     
     .header-content p {
-        color: rgba(255, 255, 255, 0.8);
+        color: rgba(26, 26, 26, 0.8);
         font-size: 1.1rem;
         margin: 0;
     }
@@ -457,12 +461,12 @@
         align-items: center;
         gap: 0.5rem;
         padding: 0.75rem 1.5rem;
-        background: rgba(52, 152, 219, 0.2);
-        color: #3498db;
+        background: rgba(0, 122, 255, 0.08);
+        color: #007AFF;
         text-decoration: none;
-        border-radius: 12px;
+        border-radius: 8px;
         transition: all 0.3s ease;
-        border: 2px solid rgba(52, 152, 219, 0.4);
+        border: 1px solid rgba(0, 0, 0, 0.12);
         font-weight: 600;
     }
     
@@ -475,19 +479,44 @@
     /* Основной контейнер */
     .edit-container {
         display: grid;
-        grid-template-columns: 2fr 1fr;
+        grid-template-columns: 260px 1fr;
         gap: 2rem;
+        align-items: start;
     }
+
+    .edit-sidebar {
+        position: sticky;
+        top: 90px;
+        height: fit-content;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        padding: 1rem;
+    }
+
+    .edit-menu { display: flex; flex-direction: column; gap: 0.5rem; }
+    .menu-link {
+        display: flex; align-items: center; gap: 0.6rem;
+        padding: 0.6rem 0.8rem;
+        border-radius: 8px;
+        color: #1A1A1A; text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    .menu-link i { color: #007AFF; width: 18px; text-align: center; }
+    .menu-link:hover { background: rgba(0,0,0,0.04); }
+    .menu-link.active { background: rgba(0,122,255,0.1); color:#007AFF; }
+
+    /* (удалены стили табов) */
     
     /* Карточки форм */
     .form-card {
-        background: rgba(255, 255, 255, 0.05);
-        border: 2px solid rgba(52, 152, 219, 0.2);
-        border-radius: 20px;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
         padding: 2rem;
         margin-bottom: 2rem;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
         transition: all 0.3s ease;
     }
     
@@ -503,16 +532,16 @@
         gap: 1rem;
         margin-bottom: 2rem;
         padding-bottom: 1rem;
-        border-bottom: 2px solid rgba(52, 152, 219, 0.3);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     }
     
     .card-header i {
         font-size: 1.5rem;
-        color: #3498db;
+        color: #007AFF;
     }
     
     .card-header h3 {
-        color: #ffffff;
+        color: #1A1A1A;
         font-size: 1.5rem;
         font-weight: 600;
         margin: 0;
@@ -532,7 +561,7 @@
     }
     
     .input-group label {
-        color: #ffffff;
+        color: #1A1A1A;
         font-weight: 600;
         font-size: 0.95rem;
     }
@@ -541,12 +570,12 @@
     .input-group textarea,
     .input-group select {
         padding: 1rem;
-        border: 2px solid rgba(52, 152, 219, 0.3);
-        border-radius: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 8px;
         font-size: 1rem;
         transition: all 0.3s ease;
-        background: rgba(255, 255, 255, 0.05);
-        color: #ffffff;
+        background: #ffffff;
+        color: #1A1A1A;
         font-family: inherit;
     }
     
@@ -554,15 +583,15 @@
     .input-group textarea:focus,
     .input-group select:focus {
         outline: none;
-        border-color: #3498db;
-        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        border-color: #007AFF;
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
         transform: translateY(-1px);
-        background: rgba(255, 255, 255, 0.08);
+        background: #ffffff;
     }
     
     .input-group input::placeholder,
     .input-group textarea::placeholder {
-        color: rgba(255, 255, 255, 0.5);
+        color: rgba(26, 26, 26, 0.5);
     }
     
     .input-group textarea {
@@ -590,20 +619,20 @@
         align-items: center;
         gap: 0.5rem;
         padding: 1rem;
-        border: 2px solid rgba(52, 152, 219, 0.3);
-        border-radius: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 8px;
         text-align: center;
         transition: all 0.3s ease;
-        background: rgba(255, 255, 255, 0.05);
-        color: rgba(255, 255, 255, 0.8);
+        background: #ffffff;
+        color: rgba(26, 26, 26, 0.8);
     }
     
     .toggle-option input[type="radio"]:checked + .toggle-label {
-        border-color: #3498db;
-        background: rgba(52, 152, 219, 0.2);
-        color: #ffffff;
+        border-color: #007AFF;
+        background: rgba(0, 122, 255, 0.12);
+        color: #1A1A1A;
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
     }
     
     /* Аватар */
@@ -618,8 +647,8 @@
         height: 60px;
         border-radius: 50%;
         object-fit: cover;
-        border: 3px solid #3498db;
-        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        border: 3px solid #ffffff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
     
     /* Кнопки */
@@ -629,16 +658,16 @@
         justify-content: center;
         gap: 0.5rem;
         padding: 1rem 2rem;
-        background: linear-gradient(135deg, #3498db, #2980b9);
+        background: #007AFF;
         color: white;
         border: none;
-        border-radius: 12px;
+        border-radius: 8px;
         font-size: 1rem;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.3s ease;
         margin-top: 1rem;
-        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
     
     .submit-btn:hover {
@@ -656,12 +685,11 @@
     
     .quick-actions,
     .community-stats {
-        background: rgba(255, 255, 255, 0.05);
-        border: 2px solid rgba(52, 152, 219, 0.2);
-        border-radius: 20px;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
         padding: 2rem;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
         transition: all 0.3s ease;
     }
     
@@ -673,7 +701,7 @@
     
     .quick-actions h3,
     .community-stats h3 {
-        color: #ffffff;
+        color: #1A1A1A;
         font-size: 1.3rem;
         font-weight: 600;
         margin: 0 0 1.5rem 0;
@@ -686,40 +714,41 @@
         gap: 1rem;
         padding: 1rem;
         margin-bottom: 1rem;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(52, 152, 219, 0.2);
-        border-radius: 12px;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
         transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
     }
     
     .action-item:hover {
-        background: rgba(52, 152, 219, 0.1);
-        border-color: rgba(52, 152, 219, 0.4);
+        background: rgba(0, 0, 0, 0.03);
+        border-color: rgba(0, 0, 0, 0.12);
         transform: translateX(5px);
     }
     
     .action-item i {
         font-size: 1.5rem;
-        color: #3498db;
+        color: #007AFF;
         width: 40px;
         text-align: center;
     }
     
     .action-content h4 {
-        color: #ffffff;
+        color: #1A1A1A;
         font-size: 1rem;
         font-weight: 600;
         margin: 0 0 0.25rem 0;
     }
     
     .action-content p {
-        color: rgba(255, 255, 255, 0.7);
+        color: rgba(26, 26, 26, 0.7);
         font-size: 0.9rem;
         margin: 0 0 0.5rem 0;
     }
     
     .action-btn {
-        color: #3498db;
+        color: #007AFF;
         text-decoration: none;
         font-weight: 600;
         font-size: 0.9rem;
@@ -727,7 +756,7 @@
     }
     
     .action-btn:hover {
-        color: #2980b9;
+        color: #005FCC;
     }
     
     /* Статистика */
@@ -740,10 +769,11 @@
     .stat-item {
         text-align: center;
         padding: 1rem;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(52, 152, 219, 0.2);
-        border-radius: 12px;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
         transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
     }
     
     .stat-item:hover {
@@ -755,12 +785,12 @@
     .stat-number {
         font-size: 2rem;
         font-weight: 700;
-        color: #3498db;
+        color: #007AFF;
         margin-bottom: 0.5rem;
     }
     
     .stat-label {
-        color: rgba(255, 255, 255, 0.7);
+        color: rgba(26, 26, 26, 0.7);
         font-size: 0.9rem;
         font-weight: 500;
     }
@@ -819,14 +849,14 @@
         align-items: center;
         margin-bottom: 2rem;
         padding: 1.5rem;
-        background: rgba(52, 152, 219, 0.1);
-        border: 2px solid rgba(52, 152, 219, 0.3);
-        border-radius: 16px;
-        backdrop-filter: blur(10px);
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
     }
     
     .content-header h2 {
-        color: #ffffff;
+        color: #1A1A1A;
         font-size: 1.8rem;
         font-weight: 600;
         margin: 0;
@@ -839,20 +869,20 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.75rem 1.5rem;
-        background: rgba(255, 255, 255, 0.1);
-        color: #ffffff;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        border-radius: 12px;
+        padding: 0.75rem 1.2rem;
+        background: #ffffff;
+        color: #1A1A1A;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 8px;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
         font-weight: 600;
         text-decoration: none;
     }
     
     .back-to-main:hover {
-        background: rgba(255, 255, 255, 0.2);
-        border-color: rgba(255, 255, 255, 0.5);
+        background: rgba(0, 0, 0, 0.04);
+        border-color: rgba(0, 0, 0, 0.16);
         transform: translateY(-2px);
     }
     
@@ -862,7 +892,7 @@
     
     /* Стили для управления участниками */
     .members-list h3 {
-        color: #ffffff;
+        color: #1A1A1A;
         font-size: 1.5rem;
         margin-bottom: 1.5rem;
     }
@@ -878,15 +908,16 @@
         align-items: center;
         gap: 1rem;
         padding: 1rem;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(52, 152, 219, 0.3);
-        border-radius: 12px;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
         transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
     }
     
     .member-card:hover {
-        background: rgba(52, 152, 219, 0.1);
-        border-color: rgba(52, 152, 219, 0.5);
+        background: rgba(0, 0, 0, 0.03);
+        border-color: rgba(0, 0, 0, 0.12);
         transform: translateY(-2px);
     }
         
@@ -894,7 +925,7 @@
         width: 50px;
         height: 50px;
         border-radius: 50%;
-        background: rgba(52, 152, 219, 0.3);
+        background: linear-gradient(45deg, #007AFF, #66A3FF);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -904,13 +935,13 @@
     }
     
     .member-info h4 {
-        color: #ffffff;
+        color: #1A1A1A;
         margin: 0 0 0.25rem 0;
         font-size: 1.1rem;
     }
     
     .member-info p {
-        color: rgba(255, 255, 255, 0.7);
+        color: rgba(26, 26, 26, 0.7);
         margin: 0;
         font-size: 0.9rem;
     }
@@ -951,17 +982,17 @@
     }
     
     .option-group label {
-        color: #ffffff;
+        color: #1A1A1A;
         font-weight: 600;
         font-size: 0.95rem;
     }
     
     .option-group input {
         padding: 0.75rem;
-        border: 2px solid rgba(52, 152, 219, 0.3);
+        border: 1px solid rgba(0, 0, 0, 0.12);
         border-radius: 8px;
-        background: rgba(255, 255, 255, 0.05);
-        color: #ffffff;
+        background: #ffffff;
+        color: #1A1A1A;
         font-size: 0.9rem;
     }
     
@@ -978,58 +1009,59 @@
         align-items: center;
         gap: 1rem;
         padding: 1.5rem;
-        background: rgba(255, 255, 255, 0.05);
-        border: 2px solid rgba(52, 152, 219, 0.3);
-        border-radius: 16px;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
         transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
     }
     
     .stat-card:hover {
-        background: rgba(52, 152, 219, 0.1);
-        border-color: rgba(52, 152, 219, 0.5);
+        background: rgba(0, 0, 0, 0.03);
+        border-color: rgba(0, 0, 0, 0.12);
         transform: translateY(-3px);
     }
     
     .stat-icon {
         width: 60px;
         height: 60px;
-        background: rgba(52, 152, 219, 0.2);
+        background: rgba(0, 122, 255, 0.1);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #3498db;
+        color: #007AFF;
         font-size: 1.5rem;
     }
     
     .stat-content .stat-number {
         font-size: 2.5rem;
         font-weight: 700;
-        color: #3498db;
+        color: #007AFF;
         margin: 0;
     }
     
     .stat-content .stat-label {
-        color: rgba(255, 255, 255, 0.7);
+        color: rgba(26, 26, 26, 0.7);
         font-size: 0.9rem;
         margin: 0;
     }
     
     .activity-chart {
-        background: rgba(255, 255, 255, 0.05);
-        border: 2px solid rgba(52, 152, 219, 0.3);
-        border-radius: 16px;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
         padding: 2rem;
         text-align: center;
         }
         
     .activity-chart h3 {
-        color: #ffffff;
+        color: #1A1A1A;
         margin-bottom: 1rem;
     }
     
     .chart-placeholder {
-        color: rgba(255, 255, 255, 0.6);
+        color: rgba(26, 26, 26, 0.6);
         font-style: italic;
         padding: 2rem;
     }
@@ -1097,9 +1129,9 @@
             background: linear-gradient(135deg, #ecf0f1, #bdc3c7);
         }
         
-        .color-option span:last-child,
-        .font-option span {
-            color: rgba(255, 255, 255, 0.8);
+    .color-option span:last-child,
+    .font-option span {
+            color: rgba(26, 26, 26, 0.8);
             font-size: 0.9rem;
             text-align: center;
         }
@@ -1145,22 +1177,22 @@
             margin-top: 1rem;
         }
         
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.9rem;
-            padding: 0.5rem 1rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: rgba(26, 26, 26, 0.8);
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+        background: rgba(0, 0, 0, 0.03);
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
         
-        .legend-item:hover {
-            background: rgba(52, 152, 219, 0.1);
-            transform: translateY(-2px);
-        }
+    .legend-item:hover {
+        background: rgba(0, 0, 0, 0.06);
+        transform: translateY(-2px);
+    }
         
         .legend-color {
             width: 16px;
@@ -1272,7 +1304,14 @@
             color: #2ecc71;
             font-weight: 700;
         }
+    /* Улучшаем удобство: сетка форм одна колонка на узких экранах */
+    @media (max-width: 900px) {
+        .edit-container { grid-template-columns: 1fr; }
+    }
 </style>
+
+<!-- Данные для графика (JSON) -->
+<script id="weekly-activity-data" type="application/json">{{ weekly_activity|tojson }}</script>
 
 <script>
     // Обработка форм
@@ -1342,6 +1381,38 @@
         }
     });
     
+    // Sidebar: мгновенное переключение секций без прокрутки
+    document.addEventListener('DOMContentLoaded', function() {
+        const links = Array.from(document.querySelectorAll('.edit-sidebar .menu-link'));
+        const basicCard = document.getElementById('section-basic');
+        const advancedCard = document.getElementById('section-advanced');
+
+        function showCard(target) {
+            if (!basicCard || !advancedCard) return;
+            const isAdvanced = target === 'advanced';
+            basicCard.style.display = isAdvanced ? 'none' : '';
+            advancedCard.style.display = isAdvanced ? '' : 'none';
+            const activeHref = isAdvanced ? '#section-advanced' : '#section-basic';
+            links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === activeHref));
+        }
+
+        // Инициализация по хэшу URL
+        if (location.hash === '#section-advanced') {
+            showCard('advanced');
+        } else {
+            showCard('basic');
+        }
+
+        links.forEach(link => link.addEventListener('click', function(e) {
+            const href = this.getAttribute('href');
+            if (href === '#section-basic' || href === '#section-advanced') {
+                e.preventDefault();
+                showCard(href === '#section-advanced' ? 'advanced' : 'basic');
+                try { history.replaceState(null, '', href); } catch (_) {}
+            }
+        }));
+    });
+
     // Анимация появления элементов
     document.addEventListener('DOMContentLoaded', function() {
         const elements = document.querySelectorAll('.form-card, .quick-actions, .community-stats');
@@ -1382,14 +1453,15 @@
         ctx.clearRect(0, 0, width, height);
         
         // Данные для диаграммы (активность по дням недели)
+        const weeklyActivity = JSON.parse(document.getElementById('weekly-activity-data')?.textContent || '{}');
         const data = [
-            { day: 'Пн', posts: {{ weekly_activity['Понедельник']['posts'] }}, comments: {{ weekly_activity['Понедельник']['comments'] }}, likes: {{ weekly_activity['Понедельник']['likes'] }} },
-            { day: 'Вт', posts: {{ weekly_activity['Вторник']['posts'] }}, comments: {{ weekly_activity['Вторник']['comments'] }}, likes: {{ weekly_activity['Вторник']['likes'] }} },
-            { day: 'Ср', posts: {{ weekly_activity['Среда']['posts'] }}, comments: {{ weekly_activity['Среда']['comments'] }}, likes: {{ weekly_activity['Среда']['likes'] }} },
-            { day: 'Чт', posts: {{ weekly_activity['Четверг']['posts'] }}, comments: {{ weekly_activity['Четверг']['comments'] }}, likes: {{ weekly_activity['Четверг']['likes'] }} },
-            { day: 'Пт', posts: {{ weekly_activity['Пятница']['posts'] }}, comments: {{ weekly_activity['Пятница']['comments'] }}, likes: {{ weekly_activity['Пятница']['likes'] }} },
-            { day: 'Сб', posts: {{ weekly_activity['Суббота']['posts'] }}, comments: {{ weekly_activity['Суббота']['comments'] }}, likes: {{ weekly_activity['Суббота']['likes'] }} },
-            { day: 'Вс', posts: {{ weekly_activity['Воскресенье']['posts'] }}, comments: {{ weekly_activity['Воскресенье']['comments'] }}, likes: {{ weekly_activity['Воскресенье']['likes'] }} }
+            { day: 'Пн', posts: (weeklyActivity['Понедельник']||{}).posts || 0, comments: (weeklyActivity['Понедельник']||{}).comments || 0, likes: (weeklyActivity['Понедельник']||{}).likes || 0 },
+            { day: 'Вт', posts: (weeklyActivity['Вторник']||{}).posts || 0, comments: (weeklyActivity['Вторник']||{}).comments || 0, likes: (weeklyActivity['Вторник']||{}).likes || 0 },
+            { day: 'Ср', posts: (weeklyActivity['Среда']||{}).posts || 0, comments: (weeklyActivity['Среда']||{}).comments || 0, likes: (weeklyActivity['Среда']||{}).likes || 0 },
+            { day: 'Чт', posts: (weeklyActivity['Четверг']||{}).posts || 0, comments: (weeklyActivity['Четверг']||{}).comments || 0, likes: (weeklyActivity['Четверг']||{}).likes || 0 },
+            { day: 'Пт', posts: (weeklyActivity['Пятница']||{}).posts || 0, comments: (weeklyActivity['Пятница']||{}).comments || 0, likes: (weeklyActivity['Пятница']||{}).likes || 0 },
+            { day: 'Сб', posts: (weeklyActivity['Суббота']||{}).posts || 0, comments: (weeklyActivity['Суббота']||{}).comments || 0, likes: (weeklyActivity['Суббота']||{}).likes || 0 },
+            { day: 'Вс', posts: (weeklyActivity['Воскресенье']||{}).posts || 0, comments: (weeklyActivity['Воскресенье']||{}).comments || 0, likes: (weeklyActivity['Воскресенье']||{}).likes || 0 }
         ];
         
         console.log('Данные для диаграммы:', data);
@@ -1468,7 +1540,7 @@
         drawArea(data.map(d => d.posts + d.comments + d.likes), colors.likes);
         
         // Рисуем подписи дней недели
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.fillStyle = 'rgba(26, 26, 26, 0.8)';
         ctx.font = '14px Arial';
         ctx.textAlign = 'center';
         
@@ -1480,7 +1552,7 @@
         
         // Рисуем значения на областях
         ctx.font = '12px Arial';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.fillStyle = 'rgba(26, 26, 26, 0.9)';
         
         for (let i = 0; i < data.length; i++) {
             const x = padding + (i * chartWidth / (data.length - 1));
@@ -1534,6 +1606,7 @@
         
         if (section) {
             section.style.display = 'block';
+            // no-op for sidebar
             
             // Если показываем статистику, отрисовываем диаграмму
             if (sectionName === 'stats') {
@@ -1551,6 +1624,7 @@
         // Показываем основной контент
         const mainContent = document.querySelector('.edit-container');
         mainContent.style.display = 'grid';
+        // no-op for sidebar
     }
     
     function hideAllDynamicContent() {
@@ -1585,6 +1659,15 @@
             });
         }
     }
+
+    // Делегирование клика по кнопкам удаления участника (без inline-обработчиков)
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.remove-member-btn');
+        if (btn) {
+            const userId = btn.getAttribute('data-user-id');
+            if (userId) removeMember(userId);
+        }
+    });
     
     // Сохранение настроек комментариев
     function saveCommentSettings() {

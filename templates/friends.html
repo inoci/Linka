@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Друзья — Линка{% endblock %}
+
+{% block content %}
+<div class="friends-layout">
+    <div class="friends-header">
+        <h1><i class="fas fa-user-friends"></i> Друзья</h1>
+        <p>Пользователи, на которых вы подписаны</p>
+    </div>
+
+    {% if friends %}
+    <div class="friends-grid">
+        {% for u in friends %}
+        <div class="friend-card">
+            <a href="{{ url_for('profile', username=u.username) }}" class="friend-main">
+                <div class="friend-avatar">
+                    {% if u.avatar %}
+                        <img src="{{ url_for('static', filename=u.avatar) }}" alt="{{ u.username }}">
+                    {% else %}
+                        {{ u.username[0].upper() }}
+                    {% endif %}
+                </div>
+                <div class="friend-info">
+                    <div class="friend-name">{{ u.first_name }} {{ u.last_name }}</div>
+                    <div class="friend-username">@{{ u.username }}</div>
+                </div>
+            </a>
+            <a class="btn-unfollow" href="{{ url_for('follow_user', username=u.username) }}">
+                <i class="fas fa-user-minus"></i> Отписаться
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon"><i class="fas fa-users"></i></div>
+        <h3>Пока нет подписок</h3>
+        <p>Находите интересных людей в ленте и подписывайтесь на них</p>
+        <a href="{{ url_for('feed') }}" class="btn-primary go-feed">
+            <i class="fas fa-home"></i> В ленту
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.friends-layout{ max-width:1200px; margin:0 auto; padding:2rem 1rem; }
+.friends-header{ background:#fff; border:1px solid rgba(0,0,0,0.08); border-radius:8px; padding:1.5rem 2rem; box-shadow:0 4px 12px rgba(0,0,0,0.06); margin-bottom:2rem; }
+.friends-header h1{ margin:0 0 .5rem 0; color:#1A1A1A; display:flex; align-items:center; gap:.75rem; }
+.friends-header p{ margin:0; color:rgba(26,26,26,.7); }
+
+.friends-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap:1.25rem; }
+.friend-card{ display:grid; grid-template-columns: 1fr auto; align-items:center; gap:1rem; background:#fff; border:1px solid rgba(0,0,0,0.08); border-radius:8px; padding:1.25rem 1.25rem; box-shadow:0 4px 12px rgba(0,0,0,0.06); }
+.friend-main{ display:flex; align-items:center; gap:1rem; text-decoration:none; color:#1A1A1A; min-width:0; }
+.friend-avatar{ width:64px; height:64px; border-radius:50%; background:linear-gradient(45deg,#007AFF,#66A3FF); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; overflow:hidden; flex-shrink:0; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
+.friend-avatar img{ width:100%; height:100%; object-fit:cover; border-radius:50%; }
+.friend-info{ min-width:0; }
+.friend-name{ font-weight:700; font-size:1.1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.friend-username{ color:rgba(26,26,26,.6); font-size:.95rem; }
+.btn-unfollow{ background:#ffffff; color:#1A1A1A; border:1px solid rgba(0,0,0,0.12); border-radius:8px; padding:.55rem .9rem; text-decoration:none; font-weight:600; transition:.2s; white-space:nowrap; justify-self:end; }
+.btn-unfollow:hover{ background:rgba(0,0,0,0.04); }
+
+.empty-state{ text-align:center; background:#fff; border:1px solid rgba(0,0,0,0.08); border-radius:8px; padding:3rem 1.5rem; box-shadow:0 4px 12px rgba(0,0,0,0.06); }
+.empty-icon{ font-size:3rem; color:rgba(26,26,26,.25); margin-bottom:1rem; }
+.go-feed{ display:inline-flex; align-items:center; gap:.5rem; margin-top:1rem; padding:.8rem 1.2rem; border-radius:8px; text-decoration:none; }
+
+/* Мобильная адаптация: кнопка на отдельной строке */
+@media (max-width: 520px) {
+  .friends-grid{ grid-template-columns: 1fr; }
+  .friend-card{ grid-template-columns: 1fr; row-gap:.75rem; }
+  .btn-unfollow{ justify-self: start; }
+}
+</style>
+{% endblock %}
+

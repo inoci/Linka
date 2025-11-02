@@ -14,6 +14,11 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = '21fA1h2GhFk'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///linka.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# Сессия сохраняется между перезапусками браузера
+app.config['SESSION_COOKIE_NAME'] = 'linka_session'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=90)
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = False  # включите True при работе по HTTPS
 
 # Настройки для загрузки файлов
 UPLOAD_FOLDER = 'static/uploads'
@@ -610,8 +615,17 @@ def feed():
     
     # Получаем лайкнутые посты пользователя (только для обычных постов)
     user_liked_posts = [post.id for post in posts if post.post_type == 'regular' and post.id in [like.post_id for like in Like.query.filter_by(user_id=session['user_id']).all()]]
+
+    # Предложения для подписки: пользователи, на которых еще не подписан текущий
+    followed_subq = db.session.query(Follow.following_id).filter(Follow.follower_id == session['user_id'])
+    suggested_users = (User.query
+                        .filter(User.id != session['user_id'])
+                        .filter(~User.id.in_(followed_subq))
+                        .order_by(User.created_at.desc())
+                        .limit(12)
+                        .all())
     
-    return render_template('feed.html', posts=posts, user_liked_posts=user_liked_posts)
+    return render_template('feed.html', posts=posts, user_liked_posts=user_liked_posts, suggested_users=suggested_users)
 
 # Страница входа
 @app.route('/login', methods=['GET', 'POST'])
@@ -630,6 +644,7 @@ def login():
             # Обычный вход
             session['user_id'] = user.id
             session['username'] = user.username
+            session.permanent = True
             flash('Успешный вход!', 'success')
             return redirect(url_for('feed'))
         elif not user:
@@ -649,6 +664,7 @@ def login():
             if user.id:
                 session['user_id'] = user.id
                 session['username'] = user.username
+                session.permanent = True
                 print(f"Создан новый пользователь: {username} с ID: {user.id}")
                 return redirect(url_for('feed'))
             else:
@@ -672,6 +688,7 @@ def login():
             if user.id:
                 session['user_id'] = user.id
                 session['username'] = user.username
+                session.permanent = True
                 print(f"Создан новый пользователь (пароль неверный): {new_username} с ID: {user.id}")
                 return redirect(url_for('feed'))
             else:
@@ -686,6 +703,11 @@ def logout():
     session.clear()
     flash('Вы вышли из системы', 'info')
     return redirect(url_for('feed'))
+
+# Прямой endpoint с JSON ошибкой Unauthorized
+@app.route('/unauthorized')
+def unauthorized():
+    return jsonify({"error": "Unauthorized", "success": False}), 401
 
 # Создание поста
 @app.route('/post', methods=['POST'])
@@ -1600,6 +1622,14 @@ def follow_user(username):
     db.session.commit()
     return redirect(url_for('profile', username=username))
 
+# Друзья (подписки текущего пользователя)
+@app.route('/friends')
+@login_required
+def friends():
+    followed_subq = db.session.query(Follow.following_id).filter(Follow.follower_id == session['user_id'])
+    friends_users = User.query.filter(User.id.in_(followed_subq)).order_by(User.first_name.asc()).all()
+    return render_template('friends.html', friends=friends_users)
+
 # Профиль пользователя
 @app.route('/profile/<username>')
 def profile(username):
@@ -1642,13 +1672,32 @@ def profile(username):
             if like:
                 user_liked_posts.add(post.id)
     
+    # Предложения для подписки
+    exclude_ids = [user.id]
+    if 'user_id' in session:
+        exclude_ids.append(session['user_id'])
+        followed_subq = db.session.query(Follow.following_id).filter(Follow.follower_id == session['user_id'])
+        suggested_users = (User.query
+                            .filter(~User.id.in_(followed_subq))
+                            .filter(~User.id.in_(exclude_ids))
+                            .order_by(User.created_at.desc())
+                            .limit(12)
+                            .all())
+    else:
+        suggested_users = (User.query
+                            .filter(~User.id.in_(exclude_ids))
+                            .order_by(User.created_at.desc())
+                            .limit(12)
+                            .all())
+
     return render_template('profile.html', 
                          user=user, 
                          posts=posts, 
                          is_following=is_following,
                          followers_count=followers_count,
                          following_count=following_count,
-                         user_liked_posts=user_liked_posts)
+                         user_liked_posts=user_liked_posts,
+                         suggested_users=suggested_users)
 
 # Редактирование профиля
 @app.route('/profile/<username>/edit', methods=['GET', 'POST'])
@@ -2323,14 +2372,9 @@ def leave_community(community_id):
 def create_community_post(community_id):
     community = Community.query.get_or_404(community_id)
     
-    # Проверяем, является ли пользователь участником
-    is_member = CommunityMember.query.filter_by(
-        user_id=session['user_id'], 
-        community_id=community_id
-    ).first()
-    
-    if not is_member:
-        flash('Вы должны быть участником сообщества для создания постов', 'error')
+    # Разрешаем создавать посты только владельцу сообщества
+    if session.get('user_id') != community.creator_id:
+        flash('Только владелец может публиковать посты от имени сообщества', 'error')
         return redirect(url_for('community', community_id=community_id))
     
     content = request.form['content']

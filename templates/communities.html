@@ -753,15 +753,15 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 3rem;
-        background: linear-gradient(135deg, rgba(52, 152, 219, 0.15), rgba(46, 204, 113, 0.15));
-        border: 1px solid rgba(52, 152, 219, 0.3);
-        border-radius: 20px;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
         padding: 2rem;
-        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
     }
     
     .header-content h1 {
-        color: #ffffff;
+        color: #1A1A1A;
         margin: 0 0 0.5rem 0;
         font-size: 2.5rem;
         font-weight: 700;
@@ -771,31 +771,32 @@
     }
     
     .header-content p {
-        color: rgba(255, 255, 255, 0.8);
+        color: rgba(26, 26, 26, 0.8);
         margin: 0;
         font-size: 1.1rem;
     }
     
     .create-community-btn {
-        background: linear-gradient(45deg, #e74c3c, #c0392b);
+        background: #007AFF;
         border: none;
-        color: white;
-        padding: 1rem 2rem;
-        border-radius: 12px;
+        color: #ffffff;
+        padding: 0.9rem 1.6rem;
+        border-radius: 8px;
         font-size: 1rem;
         font-weight: 600;
         text-decoration: none;
         display: inline-flex;
         align-items: center;
         gap: 0.75rem;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
     
     .create-community-btn:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
-        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        background: #005FCC;
+        color: #ffffff;
     }
     
     .communities-grid {
@@ -805,17 +806,17 @@
     }
     
     .community-card {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 20px;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
         overflow: hidden;
-        backdrop-filter: blur(10px);
         transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
     }
     
     .community-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
     }
     
     .community-cover {
@@ -833,7 +834,7 @@
     .default-cover {
         width: 100%;
         height: 100%;
-        background: linear-gradient(135deg, #3498db, #2980b9);
+        background: linear-gradient(135deg, #007AFF, #66A3FF);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -880,7 +881,7 @@
     .default-avatar {
         width: 60px;
         height: 60px;
-        background: linear-gradient(45deg, #f39c12, #e67e22);
+        background: linear-gradient(45deg, #007AFF, #66A3FF);
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -888,6 +889,7 @@
         font-weight: bold;
         color: white;
         font-size: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     }
     
     .community-details {
@@ -902,16 +904,16 @@
     }
     
     .community-name a {
-        color: #ffffff;
+        color: #1A1A1A;
         text-decoration: none;
     }
     
     .community-name a:hover {
-        color: #3498db;
+        color: #007AFF;
     }
     
     .community-description {
-        color: rgba(255, 255, 255, 0.8);
+        color: rgba(26, 26, 26, 0.8);
         margin: 0 0 0.75rem 0;
         line-height: 1.5;
         font-size: 0.95rem;
@@ -919,9 +921,9 @@
     
     .community-category {
         display: inline-block;
-        background: rgba(52, 152, 219, 0.2);
-        color: #3498db;
-        padding: 0.25rem 0.75rem;
+        background: rgba(0, 122, 255, 0.1);
+        color: #007AFF;
+        padding: 0.3rem 0.8rem;
         border-radius: 20px;
         font-size: 0.8rem;
         font-weight: 500;
@@ -931,19 +933,19 @@
         padding: 0 1.5rem 1rem;
         display: flex;
         gap: 2rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
     }
     
     .stat {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        color: rgba(255, 255, 255, 0.7);
+        color: rgba(26, 26, 26, 0.7);
         font-size: 0.9rem;
     }
     
     .stat i {
-        color: #3498db;
+        color: #007AFF;
         font-size: 0.8rem;
     }
     
@@ -954,21 +956,22 @@
     }
     
     .creator-badge {
-        background: linear-gradient(45deg, #f39c12, #e67e22);
-        color: white;
-        padding: 0.75rem 1.5rem;
-        border-radius: 12px;
+        background: rgba(0, 122, 255, 0.1);
+        color: #007AFF!important;
+        padding: 0.75rem 1.2rem;
+        border-radius: 8px;
         font-size: 0.9rem;
         font-weight: 600;
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
+        border: 1px solid rgba(0, 122, 255, 0.2);
     }
     
     .btn {
-        padding: 0.75rem 1.5rem;
+        padding: 0.75rem 1.2rem;
         border: none;
-        border-radius: 12px;
+        border-radius: 8px;
         text-decoration: none;
         display: inline-flex;
         align-items: center;
@@ -980,14 +983,14 @@
     }
     
     .btn-secondary {
-        background: rgba(255, 255, 255, 0.1);
-        color: rgba(255, 255, 255, 0.8);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: #ffffff;
+        color: #1A1A1A;
+        border: 1px solid rgba(0, 0, 0, 0.12);
     }
     
     .btn-secondary:hover {
-        background: rgba(255, 255, 255, 0.2);
-        color: #ffffff;
+        background: rgba(0, 0, 0, 0.04);
+        color: #1A1A1A;
         transform: translateY(-2px);
     }
     
@@ -1005,25 +1008,25 @@
         grid-column: 1 / -1;
         text-align: center;
         padding: 4rem 2rem;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: #ffffff;
+        border-radius: 8px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
     }
     
     .empty-icon {
         font-size: 4rem;
-        color: rgba(255, 255, 255, 0.3);
+        color: rgba(26, 26, 26, 0.25);
         margin-bottom: 1.5rem;
     }
     
     .empty-state h3 {
-        color: rgba(255, 255, 255, 0.8);
+        color: rgba(26, 26, 26, 0.85);
         margin-bottom: 1rem;
         font-size: 1.8rem;
     }
     
     .empty-state p {
-        color: rgba(255, 255, 255, 0.6);
+        color: rgba(26, 26, 26, 0.6);
         margin-bottom: 2rem;
         font-size: 1.1rem;
     }
@@ -1116,12 +1119,12 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.8);
+        background: rgba(0, 0, 0, 0.4);
         display: flex;
         align-items: center;
         justify-content: center;
         z-index: 1000;
-        backdrop-filter: blur(10px);
+        backdrop-filter: none;
     }
     
     /* Стили для этапов */
@@ -1131,11 +1134,11 @@
     
     /* Кнопка назад */
     .back-btn {
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: rgba(255, 255, 255, 0.8);
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        color: #1A1A1A;
         padding: 0.5rem;
-        border-radius: 50%;
+        border-radius: 8px;
         cursor: pointer;
         transition: all 0.3s ease;
         width: 40px;
@@ -1147,9 +1150,9 @@
     }
     
     .back-btn:hover {
-        background: rgba(255, 255, 255, 0.2);
-        color: #ffffff;
-        transform: scale(1.1);
+        background: rgba(0, 0, 0, 0.04);
+        color: #1A1A1A;
+        transform: scale(1.05);
     }
     
     /* Выбор цели */
@@ -1162,30 +1165,30 @@
         align-items: center;
         gap: 1.5rem;
         padding: 1.5rem;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 16px;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
         margin-bottom: 1rem;
         cursor: pointer;
         transition: all 0.3s ease;
     }
     
     .goal-option:hover {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: #3498db;
+        background: rgba(0, 0, 0, 0.02);
+        border-color: #007AFF;
         transform: translateY(-2px);
     }
     
     .goal-icon {
         width: 60px;
         height: 60px;
-        background: linear-gradient(45deg, #3498db, #2980b9);
+        background: rgba(0, 122, 255, 0.12);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 1.5rem;
-        color: white;
+        color: #007AFF;
         flex-shrink: 0;
     }
     
@@ -1194,20 +1197,20 @@
     }
     
     .goal-content h3 {
-        color: #ffffff;
+        color: #1A1A1A;
         margin: 0 0 0.5rem 0;
         font-size: 1.3rem;
         font-weight: 600;
     }
     
     .goal-content p {
-        color: rgba(255, 255, 255, 0.7);
+        color: rgba(26, 26, 26, 0.7);
         margin: 0;
         line-height: 1.5;
     }
     
     .goal-arrow {
-        color: rgba(255, 255, 255, 0.5);
+        color: #007AFF;
         font-size: 1.2rem;
     }
     
@@ -1228,16 +1231,16 @@
         align-items: center;
         gap: 1rem;
         padding: 1rem;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
         cursor: pointer;
         transition: all 0.3s ease;
     }
     
     .privacy-option:hover {
-        background: rgba(255, 255, 255, 0.05);
-        border-color: #3498db;
+        background: rgba(0, 0, 0, 0.02);
+        border-color: #007AFF;
     }
     
     .privacy-option input[type="radio"] {
@@ -1247,14 +1250,14 @@
     .radio-custom {
         width: 20px;
         height: 20px;
-        border: 2px solid rgba(255, 255, 255, 0.3);
+        border: 2px solid rgba(0, 0, 0, 0.3);
         border-radius: 50%;
         position: relative;
         transition: all 0.3s ease;
     }
     
     .privacy-option input[type="radio"]:checked + .radio-custom {
-        border-color: #3498db;
+        border-color: #007AFF;
     }
     
     .privacy-option input[type="radio"]:checked + .radio-custom::after {
@@ -1265,18 +1268,18 @@
         transform: translate(-50%, -50%);
         width: 10px;
         height: 10px;
-        background: #3498db;
+        background: #007AFF;
         border-radius: 50%;
     }
     
     .privacy-info strong {
-        color: #ffffff;
+        color: #1A1A1A;
         display: block;
         margin-bottom: 0.25rem;
     }
     
     .privacy-info small {
-        color: rgba(255, 255, 255, 0.6);
+        color: rgba(26, 26, 26, 0.6);
         font-size: 0.9rem;
     }
     
@@ -1315,7 +1318,7 @@
     .benefit-icon {
         width: 60px;
         height: 60px;
-        background: linear-gradient(45deg, #3498db, #2980b9);
+        background: #007AFF;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -1327,7 +1330,7 @@
     }
     
     .benefit-text strong {
-        color: #ffffff;
+        color: #1A1A1A;
         display: block;
         margin-bottom: 0.5rem;
         font-size: 1.1rem;
@@ -1582,16 +1585,16 @@
     }
     
     .popup-content {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 20px;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 8px;
         padding: 0;
         max-width: 900px;
         width: 95%;
         max-height: 95vh;
         overflow-y: auto;
-        backdrop-filter: blur(20px);
         position: relative;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.16);
     }
     
     .popup-header {
@@ -1599,13 +1602,13 @@
         justify-content: space-between;
         align-items: center;
         padding: 1.5rem 2rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: 20px 20px 0 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        background: #ffffff;
+        border-radius: 8px 8px 0 0;
     }
     
     .popup-header h2 {
-        color: #ffffff;
+        color: #1A1A1A;
         margin: 0;
         font-size: 1.5rem;
         font-weight: 600;
@@ -1615,11 +1618,11 @@
     }
     
     .close-btn {
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: rgba(255, 255, 255, 0.8);
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        color: #1A1A1A;
         padding: 0.5rem;
-        border-radius: 50%;
+        border-radius: 8px;
         cursor: pointer;
         transition: all 0.3s ease;
         width: 40px;
@@ -1631,9 +1634,9 @@
     }
     
     .close-btn:hover {
-        background: rgba(255, 255, 255, 0.2);
-        color: #ffffff;
-        transform: scale(1.1);
+        background: rgba(0, 0, 0, 0.04);
+        color: #1A1A1A;
+        transform: scale(1.05);
     }
     
     .popup-content form {
@@ -1643,13 +1646,13 @@
     .popup-content .form-section {
         margin-bottom: 2rem;
         padding: 1.5rem;
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        background: #ffffff;
+        border-radius: 8px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
     }
     
     .popup-content .form-section h3 {
-        color: #3498db;
+        color: #007AFF;
         margin: 0 0 1.5rem 0;
         font-size: 1.2rem;
         font-weight: 600;
@@ -1664,13 +1667,10 @@
     
     .popup-content .form-group label {
         display: block;
-        color: #ffffff;
+        color: #1A1A1A;
         font-size: 1rem;
         margin-bottom: 1rem;
         font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: #3498db;
     }
     
     .popup-content .form-group input[type="text"],
@@ -1678,10 +1678,10 @@
     .popup-content .form-group select {
         width: 100%;
         padding: 1rem;
-        border: 2px solid rgba(255, 255, 255, 0.2);
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.05);
-        color: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 8px;
+        background: #ffffff;
+        color: #1A1A1A;
         font-size: 1rem;
         font-family: inherit;
         transition: all 0.3s ease;
@@ -1691,9 +1691,9 @@
     .popup-content .form-group textarea:focus,
     .popup-content .form-group select:focus {
         outline: none;
-        border-color: #3498db;
-        background: rgba(255, 255, 255, 0.08);
-        box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+        border-color: #007AFF;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
     }
     
     .popup-content .form-group textarea {
@@ -1703,7 +1703,7 @@
     
     .popup-content .form-group small {
         display: block;
-        color: rgba(255, 255, 255, 0.6);
+        color: rgba(26, 26, 26, 0.6);
         font-size: 0.8rem;
         margin-top: 0.5rem;
     }
@@ -1718,7 +1718,7 @@
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        color: #ffffff;
+        color: #1A1A1A;
         font-size: 0.95rem;
         cursor: pointer;
         user-select: none;
@@ -1731,16 +1731,16 @@
     .popup-content .checkmark {
         width: 18px;
         height: 18px;
-        border: 2px solid rgba(255, 255, 255, 0.3);
+        border: 2px solid rgba(0, 0, 0, 0.3);
         border-radius: 4px;
-        background: rgba(255, 255, 255, 0.05);
+        background: #ffffff;
         position: relative;
         transition: all 0.3s ease;
     }
     
     .popup-content .checkbox-label input[type="checkbox"]:checked + .checkmark {
-        background: #3498db;
-        border-color: #3498db;
+        background: #007AFF;
+        border-color: #007AFF;
     }
     
     .popup-content .checkbox-label input[type="checkbox"]:checked + .checkmark::after {
@@ -1755,13 +1755,13 @@
     }
     
     .popup-content .file-upload-area {
-        border: 2px dashed rgba(255, 255, 255, 0.3);
-        border-radius: 16px;
+        border: 2px dashed rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
         padding: 1.5rem;
         text-align: center;
         cursor: pointer;
         transition: all 0.3s ease;
-        background: rgba(255, 255, 255, 0.02);
+        background: #ffffff;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -1769,17 +1769,17 @@
     }
     
     .popup-content .file-upload-area:hover {
-        border-color: #3498db;
-        background: rgba(52, 152, 219, 0.05);
+        border-color: #007AFF;
+        background: rgba(0, 122, 255, 0.04);
     }
     
     .popup-content .file-upload-area i {
         font-size: 2rem;
-        color: rgba(255, 255, 255, 0.5);
+        color: rgba(26, 26, 26, 0.5);
     }
     
     .popup-content .file-upload-area p {
-        color: rgba(255, 255, 255, 0.8);
+        color: rgba(26, 26, 26, 0.85);
         margin: 0;
         font-size: 1rem;
         font-weight: 500;
@@ -1793,10 +1793,10 @@
     .popup-content .file-preview {
         position: relative;
         margin-top: 1rem;
-        border-radius: 12px;
+        border-radius: 8px;
         overflow: hidden;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
     }
     
     .popup-content .file-preview img {
@@ -1836,13 +1836,13 @@
         justify-content: flex-end;
         margin-top: 2rem;
         padding-top: 2rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
     }
     
     .popup-content .btn {
         padding: 1rem 2rem;
         border: none;
-        border-radius: 12px;
+        border-radius: 8px;
         text-decoration: none;
         display: inline-flex;
         align-items: center;
@@ -1855,13 +1855,13 @@
     }
     
     .popup-content .btn-primary {
-        background: linear-gradient(45deg, #e74c3c, #c0392b);
+        background: #007AFF;
         color: white;
     }
     
     .popup-content .btn-primary:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(231, 76, 60, 0.3);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
     }
     
     /* Стили для отображения имени файла аватара */
@@ -1869,28 +1869,28 @@
         margin-top: 15px;
         text-align: center;
         padding: 12px 15px;
-        background: rgba(52, 152, 219, 0.1);
+        background: rgba(0, 122, 255, 0.08);
         border-radius: 8px;
-        border: 1px solid rgba(52, 152, 219, 0.2);
+        border: 1px solid rgba(0, 122, 255, 0.2);
     }
     
     .avatar-preview span {
         display: block;
-        color: #3498db;
+        color: #007AFF;
         font-size: 14px;
         font-weight: 500;
         word-break: break-all;
     }
     
     .popup-content .btn-secondary {
-        background: rgba(255, 255, 255, 0.1);
-        color: rgba(255, 255, 255, 0.8);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: #ffffff;
+        color: #1A1A1A;
+        border: 1px solid rgba(0, 0, 0, 0.12);
     }
     
     .popup-content .btn-secondary:hover {
-        background: rgba(255, 255, 255, 0.2);
-        color: #ffffff;
+        background: rgba(0, 0, 0, 0.04);
+        color: #1A1A1A;
         transform: translateY(-2px);
     }
     
@@ -1899,19 +1899,19 @@
         position: fixed;
         top: 2rem;
         right: 2rem;
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 12px;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 8px;
         padding: 1rem 1.5rem;
-        color: #ffffff;
+        color: #1A1A1A;
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        backdrop-filter: blur(10px);
         z-index: 1001;
         transform: translateX(400px);
         transition: transform 0.3s ease;
         max-width: 400px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
     }
     
     .notification.show {

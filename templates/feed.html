@@ -490,34 +490,35 @@
                             </div>
                         </div>
                     </article>
-                    
-                    <!-- Реклама между постами (каждый 3-й пост) -->
-                    {% if loop.index % 3 == 0 %}
-                    <div class="inline-ad">
-                        <div class="ad-header">
-                            <i class="fas fa-ad"></i>
-                            <span>Реклама</span>
+
+                    {% if loop.index % 3 == 0 and suggested_users %}
+                    <section class="suggestions-card">
+                        <div class="suggestions-header">
+                            <h4><i class="fas fa-user-friends"></i> Рекомендации для подписки</h4>
                         </div>
-                        <div class="ad-content">
-                            <!-- Google AdSense - Горизонтальный баннер -->
-                            <ins class="adsbygoogle"
-                                 style="display:block"
-                                 data-ad-client="ca-pub-1842490779540555"
-                                 data-ad-slot=""
-                                 data-ad-format="horizontal"
-                                 data-ad-width="728"
-                                 data-ad-height="90"></ins>
-                            <script>
-                                 (adsbygoogle = window.adsbygoogle || []).push({});
-                            </script>
-                            
-                            <!-- Fallback текст если реклама не загрузилась -->
-                            <div class="ad-fallback" style="display: none;">
-                                <h4>Новые возможности</h4>
-                                <p>Откройте для себя расширенные функции Линки: группы, события, приватные чаты!</p>
+                        <div class="suggestions-grid">
+                            {% for u in suggested_users[:6] %}
+                            <div class="suggestion-item">
+                                <a href="{{ url_for('profile', username=u.username) }}" class="suggest-user">
+                                    <div class="suggest-avatar">
+                                        {% if u.avatar %}
+                                            <img src="{{ url_for('static', filename=u.avatar) }}" alt="{{ u.username }}">
+                                        {% else %}
+                                            {{ u.username[0].upper() }}
+                                        {% endif %}
+                                    </div>
+                                    <div class="suggest-info">
+                                        <div class="suggest-name">{{ u.first_name }} {{ u.last_name }}</div>
+                                        <div class="suggest-username">@{{ u.username }}</div>
+                                    </div>
+                                </a>
+                                <a class="follow-btn" href="{{ url_for('follow_user', username=u.username) }}">
+                                    <i class="fas fa-user-plus"></i> Подписаться
+                                </a>
                             </div>
+                            {% endfor %}
                         </div>
-                    </div>
+                    </section>
                     {% endif %}
                     {% endif %}
                 {% endfor %}
@@ -539,90 +540,6 @@
 {% endif %}
     </div>
     
-    <!-- Правая колонка с рекламой -->
-    <div class="ads-column">
-        <div class="sticky-ads">
-            <!-- Реклама 1 - Премиум функции -->
-            <div class="ad-card">
-                <div class="ad-header">
-                    <i class="fas fa-star"></i>
-                    <span>Реклама</span>
-                </div>
-                <div class="ad-content">
-                    <!-- Google AdSense - Адаптивный баннер -->
-                    <ins class="adsbygoogle"
-                         style="display:block"
-                         data-ad-client="ca-pub-1842490779540555"
-                         data-ad-slot=""
-                         data-ad-format="auto"
-                         data-full-width-responsive="true"></ins>
-                    <script>
-                         (adsbygoogle = window.adsbygoogle || []).push({});
-                    </script>
-                    
-                    <!-- Fallback текст если реклама не загрузилась -->
-                    <div class="ad-fallback" style="display: none;">
-                        <h4>Кроссплатформенность</h4>
-                        <p>Линка работает на всех устройствах: телефоны, планшеты, компьютеры. Синхронизация в реальном времени!</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Реклама 2 - Сообщество -->
-            <div class="ad-card">
-                <div class="ad-header">
-                    <i class="fas fa-users"></i>
-                    <span>Реклама</span>
-                </div>
-                <div class="ad-content">
-                                                <!-- Google AdSense - Вертикальный баннер -->
-                            <ins class="adsbygoogle"
-                                 style="display:block"
-                                 data-ad-client="ca-pub-1842490779540555"
-                                 data-ad-slot=""
-                                 data-ad-format="vertical"
-                                 data-ad-width="300"
-                                 data-ad-height="600"></ins>
-                    <script>
-                         (adsbygoogle = window.adsbygoogle || []).push({});
-                    </script>
-                    
-                    <!-- Fallback текст если реклама не загрузилась -->
-                    <div class="ad-fallback" style="display: none;">
-                        <h4>Без рекламы</h4>
-                        <p>Пока реклама не загрузилась, наслаждайтесь чистым интерфейсом Линки!</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Реклама 3 - Уведомления -->
-            <div class="ad-card">
-                <div class="ad-header">
-                    <i class="fas fa-bell"></i>
-                    <span>Реклама</span>
-                </div>
-                <div class="ad-content">
-                                                <!-- Google AdSense - Квадратный баннер -->
-                            <ins class="adsbygoogle"
-                                 style="display:block"
-                                 data-ad-client="ca-pub-1842490779540555"
-                                 data-ad-slot=""
-                                 data-ad-format="square"
-                                 data-ad-width="250"
-                                 data-ad-height="250"></ins>
-                    <script>
-                         (adsbygoogle = window.adsbygoogle || []).push({});
-                    </script>
-                    
-                    <!-- Fallback текст если реклама не загрузилась -->
-                    <div class="ad-fallback" style="display: none;">
-                        <h4>Уведомления</h4>
-                        <p>Получайте уведомления о новых постах, лайках и комментариях в реальном времени!</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <script>
@@ -1364,11 +1281,10 @@
     
     /* Рекламные карточки */
     .ad-card {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 16px;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
         padding: 1rem;
-        backdrop-filter: blur(10px);
         transition: all 0.3s ease;
         overflow: hidden;
     }
@@ -1384,7 +1300,7 @@
         gap: 0.5rem;
         margin-bottom: 1rem;
         font-size: 0.9rem;
-        color: #3498db;
+        color: #007AFF;
         font-weight: 600;
     }
     
@@ -1406,11 +1322,11 @@
     .ad-fallback {
         text-align: center;
         padding: 1rem;
-        color: rgba(255, 255, 255, 0.8);
+        color: rgba(26, 26, 26, 0.8);
     }
     
     .ad-fallback h4 {
-        color: #3498db;
+        color: #007AFF;
         margin: 0 0 0.75rem 0;
         font-size: 1.1rem;
         font-weight: 600;
@@ -1455,12 +1371,11 @@
     }
     
     .create-post-card {
-        background: linear-gradient(135deg, rgba(52, 152, 219, 0.15), rgba(46, 204, 113, 0.15));
-        border: 1px solid rgba(52, 152, 219, 0.3);
-        border-radius: 20px;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
         padding: 2rem;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
     }
     
     .create-post-header {
@@ -1474,25 +1389,25 @@
         width: 60px;
         height: 60px;
         border-radius: 50%;
-        background: linear-gradient(45deg, #3498db, #2ecc71);
+        background: linear-gradient(45deg, #007AFF, #66A3FF);
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: bold;
         color: white;
         font-size: 1.5rem;
-        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     }
     
     .create-post-info h3 {
-        color: #ffffff;
+        color: #1A1A1A;
         margin: 0 0 0.5rem 0;
         font-size: 1.4rem;
         font-weight: 600;
     }
     
     .create-post-info p {
-        color: rgba(255, 255, 255, 0.7);
+        color: rgba(26, 26, 26, 0.7);
         margin: 0;
         font-size: 1rem;
     }
@@ -1505,10 +1420,10 @@
         width: 100%;
         min-height: 120px;
         padding: 1.5rem;
-        border: 2px solid rgba(255, 255, 255, 0.1);
-        border-radius: 16px;
-        background: rgba(255, 255, 255, 0.05);
-        color: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 8px;
+        background: #ffffff;
+        color: #1A1A1A;
         font-size: 1.1rem;
         font-family: inherit;
         resize: vertical;
@@ -1517,13 +1432,13 @@
     
     .post-textarea:focus {
         outline: none;
-        border-color: #3498db;
-        background: rgba(255, 255, 255, 0.08);
-        box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+        border-color: #007AFF;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
     }
     
     .post-textarea::placeholder {
-        color: rgba(255, 255, 255, 0.5);
+        color: rgba(26, 26, 26, 0.5);
     }
     
     /* Предварительный просмотр медиа */
@@ -1597,28 +1512,29 @@
     }
     
     .option-btn {
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: rgba(255, 255, 255, 0.7);
-        padding: 0.75rem;
-        border-radius: 12px;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        color: rgba(26, 26, 26, 0.85);
+        padding: 0.6rem 0.75rem;
+        border-radius: 8px;
         cursor: pointer;
-        transition: all 0.3s ease;
-        font-size: 1rem;
+        transition: all 0.2s ease;
+        font-size: 0.95rem;
     }
     
     .option-btn:hover {
-        background: rgba(255, 255, 255, 0.2);
-        color: #ffffff;
+        background: rgba(0, 122, 255, 0.06);
+        border-color: rgba(0, 122, 255, 0.25);
+        color: #1A1A1A;
         transform: translateY(-2px);
     }
     
     .publish-btn {
-        background: linear-gradient(45deg, #3498db, #2980b9);
+        background: #007AFF;
         border: none;
-        color: white;
-        padding: 1rem 2rem;
-        border-radius: 12px;
+        color: white!important;
+        padding: 0.9rem 1.6rem;
+        border-radius: 8px;
         font-size: 1rem;
         font-weight: 600;
         cursor: pointer;
@@ -1626,12 +1542,13 @@
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
     
     .publish-btn:hover {
         transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        background: #005FCC;
     }
     
     /* Настройки поста */
@@ -1933,14 +1850,14 @@
         gap: 0.5rem;
         padding: 0.75rem 1rem;
         background: rgba(52, 152, 219, 0.1);
-        border-radius: 12px;
+        border-radius: 8px;
         margin-bottom: 1rem;
         font-size: 0.9rem;
-        color: rgba(255, 255, 255, 0.8);
+        color: rgba(26, 26, 26, 0.8);
     }
     
     .repost-indicator i {
-        color: #3498db;
+        color: #007AFF;
         font-size: 0.8rem;
     }
     
@@ -1950,8 +1867,8 @@
 }
 
 .community-indicator {
-    background: rgba(52, 152, 219, 0.1);
-    border: 1px solid rgba(52, 152, 219, 0.3);
+    background: rgba(0, 122, 255, 0.08);
+    border: 1px solid rgba(0, 122, 255, 0.2);
     border-radius: 8px;
     padding: 0.5rem 0.75rem;
     margin-bottom: 1rem;
@@ -1959,20 +1876,21 @@
     align-items: center;
     gap: 0.5rem;
     font-size: 0.9rem;
+    color: rgba(26, 26, 26, 0.85);
 }
 
 .community-indicator i {
-    color: #3498db;
-    font-size: 0.8rem;
+    color: #007AFF;
+    font-size: 0.9rem;
 }
 
 .community-indicator em {
     font-style: italic;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(26, 26, 26, 0.7);
 }
 
 .community-link {
-    color: #3498db;
+    color: #007AFF;
     text-decoration: none;
     font-weight: 600;
 }
@@ -1981,24 +1899,23 @@
     text-decoration: underline;
 }
     
-    .original-author-link {
-        color: #3498db;
+.original-author-link {
+    color: #007AFF;
         text-decoration: none;
         font-weight: 500;
         transition: color 0.3s ease;
     }
     
     .original-author-link:hover {
-        color: #2980b9;
+        color: #005FCC;
         text-decoration: underline;
     }
     
     .post-card {
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 20px;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
         padding: 2rem;
-        backdrop-filter: blur(10px);
         transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
@@ -2010,14 +1927,36 @@
         top: 0;
         left: 0;
         right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, #3498db, #2ecc71, #f39c12, #e74c3c);
+        height: 3px;
+        background: #007AFF;
+        opacity: 0.9;
     }
+
+    /* Рекомендации пользователей */
+    .suggestions-card {
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
+        padding: 1.25rem;
+        margin: 1.5rem 0;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+    .suggestions-header h4 { margin: 0 0 1rem 0; color: #1A1A1A; display:flex; align-items:center; gap:0.5rem; }
+    .suggestions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.75rem; }
+    .suggestion-item { display:grid; grid-template-columns: 1fr auto; align-items:center; column-gap: 0.75rem; padding: 0.6rem 0.75rem; border:1px solid rgba(0,0,0,0.06); border-radius:8px; background:#fff; }
+    .suggest-user { display:flex; align-items:center; gap:0.75rem; text-decoration:none; color:#1A1A1A; min-width:0; }
+    .suggest-avatar { width:40px; height:40px; border-radius:50%; background:linear-gradient(45deg,#007AFF,#66A3FF); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0; overflow:hidden; }
+    .suggest-avatar img{ width:100%; height:100%; object-fit:cover; border-radius:50%; }
+    .suggest-info{ min-width:0; }
+    .suggest-name{ font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .suggest-username{ color:rgba(26,26,26,0.6); font-size:0.9rem; }
+    .follow-btn{ background:#007AFF; color:#fff!important; border-radius:8px; padding:0.45rem 0.7rem; text-decoration:none; font-weight:600; display:inline-flex; align-items:center; gap:0.4rem; box-shadow:0 2px 8px rgba(0,0,0,0.08); justify-self:end; white-space: nowrap; }
+    .follow-btn:hover{ background:#005FCC; }
     
     .post-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-        border-color: rgba(255, 255, 255, 0.2);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+        border-color: rgba(0, 0, 0, 0.12);
     }
     
     .post-header {
@@ -2072,13 +2011,13 @@
     }
     
     .user-name a {
-        color: #ffffff;
+        color: #1A1A1A;
         text-decoration: none;
         transition: color 0.3s ease;
     }
     
     .user-name a:hover {
-        color: #3498db;
+        color: #007AFF;
     }
     
     .post-meta {
@@ -2094,7 +2033,7 @@
     }
     
     .post-time {
-        color: rgba(255, 255, 255, 0.6);
+        color: rgba(26, 26, 26, 0.6);
         display: flex;
         align-items: center;
         gap: 0.5rem;
@@ -2107,7 +2046,7 @@
     .menu-btn {
         background: none;
         border: none;
-        color: rgba(255, 255, 255, 0.6);
+        color: rgba(26, 26, 26, 0.6);
         padding: 0.5rem;
         border-radius: 8px;
         cursor: pointer;
@@ -2116,8 +2055,8 @@
     }
     
     .menu-btn:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: #ffffff;
+        background: rgba(0, 0, 0, 0.05);
+        color: #1A1A1A;
     }
     
     .post-content {
@@ -2125,7 +2064,7 @@
     }
     
     .post-content p {
-        color: #ffffff;
+        color: #1A1A1A;
         font-size: 1.1rem;
         line-height: 1.6;
         margin: 0;
@@ -2247,8 +2186,8 @@
         display: flex;
         gap: 2rem;
         padding: 1rem 0;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
         margin-bottom: 1.5rem;
     }
     
@@ -2256,12 +2195,12 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        color: rgba(255, 255, 255, 0.7);
+        color: rgba(26, 26, 26, 0.7);
         font-size: 0.9rem;
     }
     
     .stat-item i {
-        color: #3498db;
+        color: #007AFF;
     }
     
     .post-actions {
@@ -2271,11 +2210,11 @@
     }
     
     .action-btn {
-        background: none;
-        border: none;
-        color: rgba(255, 255, 255, 0.7);
+        background: rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        color: rgba(26, 26, 26, 0.85);
         padding: 0.75rem 1.5rem;
-        border-radius: 12px;
+        border-radius: 8px;
         cursor: pointer;
         transition: all 0.3s ease;
         display: flex;
@@ -2288,8 +2227,8 @@
     }
     
     .action-btn:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: #ffffff;
+        background: rgba(0, 0, 0, 0.06);
+        color: #1A1A1A;
         transform: translateY(-2px);
     }
     
@@ -2306,11 +2245,11 @@
     .comments-section {
         margin-top: 1.5rem;
         padding-top: 1.5rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
     }
     
     .comments-header h4 {
-        color: #ffffff;
+        color: #1A1A1A;
         margin: 0 0 1rem 0;
         font-size: 1.1rem;
         font-weight: 600;
@@ -2329,33 +2268,34 @@
     .comment-input {
         flex: 1;
         padding: 0.75rem 1rem;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.05);
-        color: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 8px;
+        background: #ffffff;
+        color: #1A1A1A;
         font-size: 0.95rem;
         transition: all 0.3s ease;
     }
     
     .comment-input:focus {
         outline: none;
-        border-color: #3498db;
-        background: rgba(255, 255, 255, 0.08);
+        border-color: #007AFF;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
     }
     
     .comment-submit {
-        background: #3498db;
+        background: #007AFF;
         border: none;
         color: white;
         padding: 0.75rem;
-        border-radius: 12px;
+        border-radius: 8px;
         cursor: pointer;
         transition: all 0.3s ease;
         font-size: 1rem;
     }
     
     .comment-submit:hover {
-        background: #2980b9;
+        background: #005FCC;
         transform: translateY(-2px);
     }
     
@@ -2369,9 +2309,10 @@
         display: flex;
         gap: 1rem;
         padding: 1rem;
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: 12px;
-        border-left: 3px solid #3498db;
+        background: #ffffff;
+        border-radius: 8px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-left: 3px solid #007AFF;
     }
     
     .comment-avatar {
@@ -2400,18 +2341,18 @@
     }
     
     .comment-author {
-        color: #3498db;
+        color: #007AFF;
         font-weight: 600;
         font-size: 0.9rem;
     }
     
     .comment-time {
-        color: rgba(255, 255, 255, 0.5);
+        color: rgba(26, 26, 26, 0.5);
         font-size: 0.8rem;
     }
     
     .comment-text {
-        color: rgba(255, 255, 255, 0.9);
+        color: rgba(26, 26, 26, 0.9);
         margin: 0 0 0.75rem 0;
         line-height: 1.5;
     }
@@ -2443,25 +2384,25 @@
     .empty-state {
         text-align: center;
         padding: 4rem 2rem;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: #ffffff;
+        border-radius: 8px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
     }
     
     .empty-icon {
         font-size: 4rem;
-        color: rgba(255, 255, 255, 0.3);
+        color: rgba(26, 26, 26, 0.25);
         margin-bottom: 1.5rem;
     }
     
     .empty-state h3 {
-        color: rgba(255, 255, 255, 0.8);
+        color: rgba(26, 26, 26, 0.85);
         margin-bottom: 1rem;
         font-size: 1.8rem;
     }
     
     .empty-state p {
-        color: rgba(255, 255, 255, 0.6);
+        color: rgba(26, 26, 26, 0.6);
         margin-bottom: 2rem;
         font-size: 1.1rem;
     }
@@ -2481,7 +2422,7 @@
     }
     
     .btn-primary {
-        background: linear-gradient(45deg, #3498db, #2980b9);
+        background: #007AFF;
         color: white;
     }
     
@@ -2575,21 +2516,20 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.8);
-        backdrop-filter: blur(10px);
+        background: rgba(0, 0, 0, 0.4);
     }
     
     .popup-content {
         position: relative;
-        background: linear-gradient(135deg, #2c3e50, #34495e);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 20px;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 8px;
         padding: 0;
         max-width: 500px;
         width: 90%;
         max-height: 80vh;
         overflow-y: auto;
-        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.8);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.16);
         animation: popupSlideIn 0.3s ease-out;
         /* Убираем transform для лучшего центрирования */
         margin: auto;
@@ -2610,25 +2550,25 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1.5rem 2rem 1rem 2rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        background: linear-gradient(135deg, rgba(52, 152, 219, 0.2), rgba(46, 204, 113, 0.2));
-        border-radius: 20px 20px 0 0;
+        padding: 1.25rem 1.5rem 1rem 1.5rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        background: #ffffff;
+        border-radius: 8px 8px 0 0;
     }
     
     .popup-header h3 {
-        color: #ffffff;
+        color: #1A1A1A;
         margin: 0;
         font-size: 1.4rem;
         font-weight: 600;
     }
     
     .close-popup-btn {
-        background: rgba(255, 255, 255, 0.1);
-        border: none;
-        color: rgba(255, 255, 255, 0.7);
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        color: #1A1A1A;
         padding: 0.75rem;
-        border-radius: 50%;
+        border-radius: 8px;
         cursor: pointer;
         transition: all 0.3s ease;
         width: 40px;
@@ -2640,13 +2580,13 @@
     }
     
     .close-popup-btn:hover {
-        background: rgba(255, 255, 255, 0.2);
-        color: #ffffff;
-        transform: scale(1.1);
+        background: rgba(0, 0, 0, 0.04);
+        color: #1A1A1A;
+        transform: scale(1.05);
     }
     
     .popup-body {
-        padding: 2rem;
+        padding: 1.5rem;
     }
     
     .popup-body .setting-group {
@@ -2659,7 +2599,7 @@
     
     .popup-body .setting-group label {
         display: block;
-        color: #ffffff;
+        color: #1A1A1A;
         font-size: 1rem;
         margin-bottom: 0.75rem;
         font-weight: 600;
@@ -2668,32 +2608,32 @@
     .popup-body .post-select,
     .popup-body .post-input {
         width: 100%;
-        padding: 1rem;
-        border: 2px solid rgba(255, 255, 255, 0.2);
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.05);
-        color: #ffffff;
+        padding: 0.9rem 1rem;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 8px;
+        background: #ffffff;
+        color: #1A1A1A;
         font-size: 1rem;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
     }
     
     .popup-body .post-select:focus,
     .popup-body .post-input:focus {
         outline: none;
-        border-color: #3498db;
-        background: rgba(255, 255, 255, 0.08);
-        box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+        border-color: #007AFF;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
     }
     
     .popup-body .post-select option {
-        background: #2c3e50;
-        color: #ffffff;
+        background: #ffffff;
+        color: #1A1A1A;
         padding: 0.5rem;
     }
     
     .setting-hint {
         display: block;
-        color: rgba(255, 255, 255, 0.6);
+        color: rgba(26, 26, 26, 0.6);
         font-size: 0.85rem;
         margin-top: 0.5rem;
         font-style: italic;
@@ -2702,17 +2642,17 @@
     .popup-footer {
         display: flex;
         gap: 1rem;
-        padding: 1.5rem 2rem 2rem 2rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        background: rgba(0, 0, 0, 0.1);
-        border-radius: 0 0 20px 20px;
+        padding: 1rem 1.5rem 1.5rem 1.5rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+        background: #ffffff;
+        border-radius: 0 0 8px 8px;
     }
     
     .popup-footer .btn {
         flex: 1;
-        padding: 1rem 1.5rem;
+        padding: 0.9rem 1.2rem;
         border: none;
-        border-radius: 12px;
+        border-radius: 8px;
         font-size: 1rem;
         font-weight: 600;
         cursor: pointer;
@@ -2725,26 +2665,27 @@
     }
     
     .btn-secondary {
-        background: rgba(255, 255, 255, 0.1);
-        color: rgba(255, 255, 255, 0.8);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: #ffffff;
+        color: #1A1A1A;
+        border: 1px solid rgba(0, 0, 0, 0.12);
     }
     
     .btn-secondary:hover {
-        background: rgba(255, 255, 255, 0.2);
-        color: #ffffff;
+        background: rgba(0, 0, 0, 0.04);
+        color: #1A1A1A;
         transform: translateY(-2px);
     }
     
     .btn-primary {
-        background: linear-gradient(45deg, #3498db, #2980b9);
+        background: #007AFF;
         color: white;
-        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
     
     .btn-primary:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        background: #005FCC;
     }
     
     /* Адаптивность для popup */

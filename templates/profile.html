@@ -218,6 +218,36 @@
                             </div>
                         </div>
                     </article>
+
+                    {% if loop.index % 3 == 0 and suggested_users %}
+                    <section class="suggestions-card">
+                        <div class="suggestions-header">
+                            <h4><i class="fas fa-user-friends"></i> Рекомендации для подписки</h4>
+                        </div>
+                        <div class="suggestions-grid">
+                            {% for u in suggested_users[:6] %}
+                            <div class="suggestion-item">
+                                <a href="{{ url_for('profile', username=u.username) }}" class="suggest-user">
+                                    <div class="suggest-avatar">
+                                        {% if u.avatar %}
+                                            <img src="{{ url_for('static', filename=u.avatar) }}" alt="{{ u.username }}">
+                                        {% else %}
+                                            {{ u.username[0].upper() }}
+                                        {% endif %}
+                                    </div>
+                                    <div class="suggest-info">
+                                        <div class="suggest-name">{{ u.first_name }} {{ u.last_name }}</div>
+                                        <div class="suggest-username">@{{ u.username }}</div>
+                                    </div>
+                                </a>
+                                <a class="follow-btn" href="{{ url_for('follow_user', username=u.username) }}">
+                                    <i class="fas fa-user-plus"></i> Подписаться
+                                </a>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                    {% endif %}
                     {% endif %}
                 {% endfor %}
             </div>
@@ -240,68 +270,7 @@
     </div>
 
     <!-- Правая колонка с рекламой -->
-    <div class="ads-column">
-        <div class="sticky-ads">
-            <!-- Google AdSense -->
-            <div class="ad-card">
-                <div class="ad-header">
-                    <i class="fas fa-ad"></i>
-                    <span>Реклама</span>
-                </div>
-                <div class="ad-content">
-                    <ins class="adsbygoogle"
-                         style="display:block"
-                         data-ad-client="ca-pub-1842490779540555"
-                         data-ad-slot=""
-                         data-ad-format="auto"
-                         data-full-width-responsive="true"></ins>
-                    <div class="ad-fallback">
-                        <h4>Кроссплатформенность</h4>
-                        <p>Линка доступна на всех устройствах</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Вертикальный баннер -->
-            <div class="ad-card">
-                <div class="ad-header">
-                    <i class="fas fa-ad"></i>
-                    <span>Реклама</span>
-                </div>
-                <div class="ad-content">
-                    <ins class="adsbygoogle"
-                         style="display:block"
-                         data-ad-client="ca-pub-1842490779540555"
-                         data-ad-slot=""
-                         data-ad-format="vertical"></ins>
-                    <div class="ad-fallback">
-                        <h4>Без рекламы</h4>
-                        <p>Чистый интерфейс без навязчивых объявлений</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Квадратный баннер -->
-            <div class="ad-card">
-                <div class="ad-header">
-                    <i class="fas fa-ad"></i>
-                    <span>Реклама</span>
-                </div>
-                <div class="ad-content">
-                    <ins class="adsbygoogle"
-                         style="display:block"
-                         data-ad-client="ca-pub-1842490779540555"
-                         data-ad-slot=""
-                         data-ad-format="square"></ins>
-                    <div class="ad-fallback">
-                        <h4>Современный дизайн</h4>
-                        <p>Красивый и удобный интерфейс</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+    
 
 <!-- JavaScript для интерактивности -->
 <script>
@@ -456,22 +425,22 @@ setInterval(checkAdLoading, 10000);
 }
 
 .sticky-ads::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.04);
     border-radius: 3px;
 }
 
 .sticky-ads::-webkit-scrollbar-thumb {
-    background: rgba(52, 152, 219, 0.5);
+    background: rgba(0, 122, 255, 0.5);
     border-radius: 3px;
 }
 
 .sticky-ads::-webkit-scrollbar-thumb:hover {
-    background: rgba(52, 152, 219, 0.7);
+    background: rgba(0, 122, 255, 0.7);
 }
 
 .sticky-ads {
     scrollbar-width: thin;
-    scrollbar-color: rgba(52, 152, 219, 0.5) rgba(255, 255, 255, 0.05);
+    scrollbar-color: rgba(0, 122, 255, 0.5) rgba(0, 0, 0, 0.04);
 }
 
 /* Профиль пользователя */
@@ -479,13 +448,33 @@ setInterval(checkAdLoading, 10000);
     margin-bottom: 2rem;
 }
 
+/* Рекомендации пользователей (общие стили с лентой) */
+.suggestions-card {
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin: 1.5rem 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+.suggestions-header h4 { margin: 0 0 1rem 0; color: #1A1A1A; display:flex; align-items:center; gap:0.5rem; }
+.suggestions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.75rem; }
+.suggestion-item { display:grid; grid-template-columns: 1fr auto; align-items:center; column-gap: 0.75rem; padding: 0.6rem 0.75rem; border:1px solid rgba(0,0,0,0.06); border-radius:8px; background:#fff; }
+.suggest-user { display:flex; align-items:center; gap:0.75rem; text-decoration:none; color:#1A1A1A; min-width:0; }
+.suggest-avatar { width:40px; height:40px; border-radius:50%; background:linear-gradient(45deg,#007AFF,#66A3FF); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0; overflow:hidden; }
+.suggest-avatar img{ width:100%; height:100%; object-fit:cover; border-radius:50%; }
+.suggest-info{ min-width:0; }
+.suggest-name{ font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.suggest-username{ color:rgba(26,26,26,0.6); font-size:0.9rem; }
+.follow-btn{ background:#007AFF; color:#fff!important; border-radius:8px; padding:0.45rem 0.7rem; text-decoration:none; font-weight:600; display:inline-flex; align-items:center; gap:0.4rem; box-shadow:0 2px 8px rgba(0,0,0,0.08); justify-self:end; white-space: nowrap; }
+.follow-btn:hover{ background:#005FCC; }
+
 .profile-header-card {
-    background: linear-gradient(135deg, rgba(52, 152, 219, 0.15), rgba(46, 204, 113, 0.15));
-    border: 1px solid rgba(52, 152, 219, 0.3);
-    border-radius: 20px;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
     padding: 2rem;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .profile-info {
@@ -498,7 +487,7 @@ setInterval(checkAdLoading, 10000);
 .profile-avatar-large {
     width: 120px;
     height: 120px;
-    background: linear-gradient(135deg, #3498db, #2980b9);
+    background: linear-gradient(135deg, #007AFF, #66A3FF);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -506,25 +495,25 @@ setInterval(checkAdLoading, 10000);
     font-size: 3rem;
     font-weight: bold;
     color: white;
-    box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
     flex-shrink: 0;
 }
 
 .profile-details h1 {
-    color: #ffffff;
+    color: #1A1A1A;
     margin: 0 0 0.5rem 0;
     font-size: 2.5rem;
     font-weight: 700;
 }
 
 .username {
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(26, 26, 26, 0.7);
     font-size: 1.2rem;
     margin: 0 0 1rem 0;
 }
 
 .bio {
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(26, 26, 26, 0.85);
     margin: 0 0 1.5rem 0;
     font-size: 1.1rem;
     line-height: 1.6;
@@ -541,13 +530,13 @@ setInterval(checkAdLoading, 10000);
 
 .stat-number {
     display: block;
-    color: #3498db;
+    color: #007AFF;
     font-size: 2rem;
     font-weight: bold;
 }
 
 .stat-label {
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(26, 26, 26, 0.6);
     font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -562,7 +551,7 @@ setInterval(checkAdLoading, 10000);
 .btn {
     padding: 1rem 2rem;
     border: none;
-    border-radius: 12px;
+    border-radius: 8px;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
@@ -574,7 +563,7 @@ setInterval(checkAdLoading, 10000);
 }
 
 .btn-primary {
-    background: linear-gradient(45deg, #3498db, #2980b9);
+    background: #007AFF;
     color: white;
 }
 
@@ -601,11 +590,10 @@ setInterval(checkAdLoading, 10000);
 }
 
 .post-card {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
     padding: 2rem;
-    backdrop-filter: blur(10px);
     transition: all 0.3s ease;
     overflow: hidden;
 }
@@ -621,24 +609,24 @@ setInterval(checkAdLoading, 10000);
     gap: 0.5rem;
     padding: 0.75rem 1rem;
     background: rgba(52, 152, 219, 0.1);
-    border-radius: 12px;
+    border-radius: 8px;
     margin-bottom: 1rem;
     font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(26, 26, 26, 0.8);
 }
 
 .repost-indicator i {
-    color: #3498db;
+    color: #007AFF;
     font-size: 0.8rem;
 }
 
 .repost-indicator em {
     font-style: italic;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(26, 26, 26, 0.7);
 }
 
 .original-author-link {
-    color: #3498db;
+    color: #007AFF;
     text-decoration: none;
     font-weight: 500;
 }
@@ -659,7 +647,7 @@ setInterval(checkAdLoading, 10000);
 .post-avatar {
     width: 50px;
     height: 50px;
-    background: linear-gradient(45deg, #f39c12, #e67e22);
+    background: linear-gradient(45deg, #007AFF, #66A3FF);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -668,16 +656,17 @@ setInterval(checkAdLoading, 10000);
     color: white;
     font-size: 1.2rem;
     flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .user-details h4 {
     margin: 0 0 0.25rem 0;
-    color: #ffffff;
+    color: #1A1A1A;
     font-size: 1.1rem;
 }
 
 .user-details a {
-    color: #ffffff;
+    color: #1A1A1A;
     text-decoration: none;
 }
 
@@ -686,7 +675,7 @@ setInterval(checkAdLoading, 10000);
     gap: 1rem;
     align-items: center;
     font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(26, 26, 26, 0.6);
 }
 
 .post-menu {
@@ -696,16 +685,15 @@ setInterval(checkAdLoading, 10000);
 .menu-btn {
     background: none;
     border: none;
-    color: rgba(255, 255, 255, 0.6);
+    color: #1A1A1A;
     padding: 0.5rem;
     border-radius: 8px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .menu-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
+    background: rgba(0, 0, 0, 0.06);
 }
 
 .post-content {
@@ -713,10 +701,10 @@ setInterval(checkAdLoading, 10000);
 }
 
 .post-content p {
-    color: rgba(255, 255, 255, 0.9);
+    color: #1A1A1A;
     line-height: 1.6;
     margin: 0 0 1rem 0;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
 }
 
 .post-image {
@@ -726,7 +714,7 @@ setInterval(checkAdLoading, 10000);
 .post-image-content {
     max-width: 100%;
     border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .post-emoji {
@@ -760,9 +748,9 @@ setInterval(checkAdLoading, 10000);
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(26, 26, 26, 0.8);
     margin-bottom: 0.5rem;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
 }
 
 .location-map {
@@ -775,8 +763,8 @@ setInterval(checkAdLoading, 10000);
     display: flex;
     gap: 2rem;
     padding: 1rem 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     margin-bottom: 1.5rem;
 }
 
@@ -784,7 +772,7 @@ setInterval(checkAdLoading, 10000);
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(26, 26, 26, 0.7);
     font-size: 0.9rem;
 }
 
