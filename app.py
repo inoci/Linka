@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
+from flask_socketio import SocketIO, emit, join_room, leave_room
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import os
@@ -12,6 +13,7 @@ from functools import wraps
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '21fA1h2GhFk'
+socketio = SocketIO(app, cors_allowed_origins="*", manage_session=False)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///linka.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Сессия сохраняется между перезапусками браузера
@@ -270,6 +272,22 @@ class Reaction(db.Model):
     
     user = db.relationship('User', backref=db.backref('user_reactions', lazy=True))
     post = db.relationship('Post', backref=db.backref('post_reactions', lazy=True))
+
+# Модель для личных сообщений
+class Message(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
+    recipient_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Связи
+    sender = db.relationship('User', foreign_keys=[sender_id], backref=db.backref('sent_messages', lazy=True))
+    recipient = db.relationship('User', foreign_keys=[recipient_id], backref=db.backref('received_messages', lazy=True))
+    
+    def __repr__(self):
+        return f'<Message {self.id} from {self.sender_id} to {self.recipient_id}>'
 
 # Модель подписки
 class Follow(db.Model):
@@ -706,6 +724,12 @@ def logout():
     session.clear()
     flash('Вы вышли из системы', 'info')
     return redirect(url_for('feed'))
+
+# Маршрут для обслуживания загруженных файлов (изображений и видео)
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    """Служит загруженные файлы из папки static/uploads"""
+    return send_from_directory(UPLOAD_FOLDER, filename)
 
 # Прямой endpoint с JSON ошибкой Unauthorized
 @app.route('/unauthorized')
@@ -1691,7 +1715,21 @@ def follow_user(username):
         # Если не подписаны, подписываемся
         new_follow = Follow(follower_id=session['user_id'], following_id=user_to_follow.id)
         db.session.add(new_follow)
-        flash(f'Вы подписались на {user_to_follow.first_name}', 'success')
+        
+        # Проверяем, подписан ли тот пользователь на нас
+        # Если нет - автоматически подписываем его на нас (добавляем в его друзья)
+        reverse_follow = Follow.query.filter_by(
+            follower_id=user_to_follow.id,
+            following_id=session['user_id']
+        ).first()
+        
+        if not reverse_follow:
+            # Автоматически подписываем другого пользователя на текущего
+            reverse_new_follow = Follow(follower_id=user_to_follow.id, following_id=session['user_id'])
+            db.session.add(reverse_new_follow)
+            flash(f'Вы подписались на {user_to_follow.first_name}. Теперь вы друзья!', 'success')
+        else:
+            flash(f'Вы подписались на {user_to_follow.first_name}', 'success')
     
     db.session.commit()
     return redirect(url_for('profile', username=username))
@@ -1703,6 +1741,202 @@ def friends():
     followed_subq = db.session.query(Follow.following_id).filter(Follow.follower_id == session['user_id'])
     friends_users = User.query.filter(User.id.in_(followed_subq)).order_by(User.first_name.asc()).all()
     return render_template('friends.html', friends=friends_users)
+
+# Мессенджер - список диалогов
+@app.route('/messages')
+@login_required
+def messages():
+    current_user_id = session['user_id']
+    
+    # Получаем список пользователей, на которых подписан текущий пользователь
+    followed_ids = [f.following_id for f in Follow.query.filter_by(follower_id=current_user_id).all()]
+    
+    # Получаем последние сообщения для каждого диалога
+    dialogues = []
+    for user_id in followed_ids:
+        # Получаем последнее сообщение с этим пользователем (в любую сторону)
+        last_message = Message.query.filter(
+            db.or_(
+                db.and_(Message.sender_id == current_user_id, Message.recipient_id == user_id),
+                db.and_(Message.sender_id == user_id, Message.recipient_id == current_user_id)
+            )
+        ).order_by(Message.created_at.desc()).first()
+        
+        if last_message:
+            other_user = User.query.get(user_id)
+            if other_user:
+                # Подсчитываем непрочитанные сообщения
+                unread_count = Message.query.filter_by(
+                    sender_id=user_id,
+                    recipient_id=current_user_id,
+                    is_read=False
+                ).count()
+                
+                dialogues.append({
+                    'user': other_user,
+                    'last_message': last_message,
+                    'unread_count': unread_count
+                })
+        else:
+            # Добавляем пользователей, с которыми еще нет сообщений
+            other_user = User.query.get(user_id)
+            if other_user:
+                dialogues.append({
+                    'user': other_user,
+                    'last_message': None,
+                    'unread_count': 0
+                })
+    
+    # Сортируем по дате последнего сообщения (если есть)
+    dialogues.sort(key=lambda x: x['last_message'].created_at if x['last_message'] else datetime(1970, 1, 1), reverse=True)
+    
+    return render_template('messages.html', dialogues=dialogues)
+
+# Мессенджер - чат с конкретным пользователем
+@app.route('/messages/<username>')
+@login_required
+def chat(username):
+    current_user_id = session['user_id']
+    other_user = User.query.filter_by(username=username).first_or_404()
+    
+    # Проверяем, подписан ли текущий пользователь на этого пользователя
+    is_following = Follow.query.filter_by(
+        follower_id=current_user_id,
+        following_id=other_user.id
+    ).first() is not None
+    
+    if not is_following:
+        flash('Вы можете отправлять сообщения только пользователям, на которых подписаны', 'error')
+        return redirect(url_for('messages'))
+    
+    # Получаем все сообщения между текущим пользователем и выбранным
+    messages_list = Message.query.filter(
+        db.or_(
+            db.and_(Message.sender_id == current_user_id, Message.recipient_id == other_user.id),
+            db.and_(Message.sender_id == other_user.id, Message.recipient_id == current_user_id)
+        )
+    ).order_by(Message.created_at.asc()).all()
+    
+    # Помечаем сообщения как прочитанные
+    Message.query.filter_by(
+        sender_id=other_user.id,
+        recipient_id=current_user_id,
+        is_read=False
+    ).update({'is_read': True})
+    db.session.commit()
+    
+    return render_template('chat.html', other_user=other_user, messages=messages_list)
+
+# API: Отправка сообщения
+@app.route('/api/messages/send', methods=['POST'])
+@login_required
+def send_message():
+    data = request.get_json()
+    recipient_username = data.get('username')
+    content = data.get('content', '').strip()
+    
+    if not content:
+        return jsonify({'success': False, 'error': 'Сообщение не может быть пустым'}), 400
+    
+    recipient = User.query.filter_by(username=recipient_username).first()
+    if not recipient:
+        return jsonify({'success': False, 'error': 'Пользователь не найден'}), 404
+    
+    # Проверяем, подписан ли текущий пользователь на получателя
+    is_following = Follow.query.filter_by(
+        follower_id=session['user_id'],
+        following_id=recipient.id
+    ).first() is not None
+    
+    if not is_following:
+        return jsonify({'success': False, 'error': 'Вы можете отправлять сообщения только пользователям, на которых подписаны'}), 403
+    
+    # Создаем сообщение
+    sender = User.query.get(session['user_id'])
+    message = Message(
+        sender_id=session['user_id'],
+        recipient_id=recipient.id,
+        content=content
+    )
+    
+    db.session.add(message)
+    db.session.commit()
+    
+    # Отправляем сообщение получателю через WebSocket
+    current_user_id = session['user_id']
+    chat_room = f"chat_{min(current_user_id, recipient.id)}_{max(current_user_id, recipient.id)}"
+    
+    message_data = {
+        'message_id': message.id,
+        'sender_id': current_user_id,
+        'sender_username': sender.username,
+        'sender_name': f"{sender.first_name} {sender.last_name}",
+        'sender_avatar': sender.avatar if sender.avatar else None,
+        'content': content,
+        'created_at': message.created_at.strftime('%H:%M'),
+        'created_at_full': message.created_at.strftime('%d.%m.%Y %H:%M'),
+        'is_own': False
+    }
+    
+    # Отправляем в комнату чата
+    socketio.emit('new_message', message_data, room=chat_room)
+    # Также отправляем получателю в его личную комнату (для уведомлений)
+    socketio.emit('new_message', message_data, room=f"user_{recipient.id}")
+    
+    return jsonify({
+        'success': True,
+        'message_id': message.id,
+        'created_at': message.created_at.strftime('%d.%m.%Y %H:%M')
+    })
+
+# API: Получение новых сообщений
+@app.route('/api/messages/<username>')
+@login_required
+def get_messages(username):
+    current_user_id = session['user_id']
+    other_user = User.query.filter_by(username=username).first_or_404()
+    
+    # Получаем сообщения после последнего полученного (для обновления в реальном времени)
+    since = request.args.get('since')
+    if since:
+        try:
+            since_time = datetime.fromisoformat(since.replace('Z', '+00:00'))
+            messages_query = Message.query.filter(
+                db.or_(
+                    db.and_(Message.sender_id == current_user_id, Message.recipient_id == other_user.id),
+                    db.and_(Message.sender_id == other_user.id, Message.recipient_id == current_user_id)
+                ),
+                Message.created_at > since_time
+            ).order_by(Message.created_at.asc()).all()
+        except:
+            messages_query = []
+    else:
+        messages_query = Message.query.filter(
+            db.or_(
+                db.and_(Message.sender_id == current_user_id, Message.recipient_id == other_user.id),
+                db.and_(Message.sender_id == other_user.id, Message.recipient_id == current_user_id)
+            )
+        ).order_by(Message.created_at.asc()).limit(50).all()
+    
+    # Помечаем полученные сообщения как прочитанные
+    Message.query.filter_by(
+        sender_id=other_user.id,
+        recipient_id=current_user_id,
+        is_read=False
+    ).update({'is_read': True})
+    db.session.commit()
+    
+    messages_data = []
+    for msg in messages_query:
+        messages_data.append({
+            'id': msg.id,
+            'sender_id': msg.sender_id,
+            'content': msg.content,
+            'created_at': msg.created_at.strftime('%d.%m.%Y %H:%M'),
+            'is_own': msg.sender_id == current_user_id
+        })
+    
+    return jsonify({'success': True, 'messages': messages_data})
 
 # Профиль пользователя
 @app.route('/profile/<username>')
@@ -1772,6 +2006,83 @@ def profile(username):
                          following_count=following_count,
                          user_liked_posts=user_liked_posts,
                          suggested_users=suggested_users)
+
+# Поиск
+@app.route('/search')
+@login_required
+def search():
+    query = request.args.get('q', '').strip()
+    tab = request.args.get('tab', 'all')  # all, users, communities, posts, friends
+    
+    results = {
+        'users': [],
+        'communities': [],
+        'posts': [],
+        'friends': []
+    }
+    
+    if query:
+        # Поиск пользователей
+        if tab in ['all', 'users']:
+            users_query = User.query.filter(
+                db.or_(
+                    User.username.ilike(f'%{query}%'),
+                    User.first_name.ilike(f'%{query}%'),
+                    User.last_name.ilike(f'%{query}%'),
+                    User.bio.ilike(f'%{query}%')
+                )
+            ).limit(20).all()
+            results['users'] = users_query
+        
+        # Поиск сообществ
+        if tab in ['all', 'communities']:
+            communities_query = Community.query.filter(
+                db.or_(
+                    Community.name.ilike(f'%{query}%'),
+                    Community.description.ilike(f'%{query}%'),
+                    Community.category.ilike(f'%{query}%')
+                )
+            ).limit(20).all()
+            results['communities'] = communities_query
+        
+        # Поиск постов
+        if tab in ['all', 'posts']:
+            posts_query = Post.query.filter(
+                db.or_(
+                    Post.content.ilike(f'%{query}%'),
+                    Post.tags.ilike(f'%{query}%'),
+                    Post.category.ilike(f'%{query}%')
+                )
+            ).order_by(Post.created_at.desc()).limit(50).all()
+            
+            # Добавляем информацию о пользователях
+            for post in posts_query:
+                post.user = User.query.get(post.user_id)
+                if post.community_id:
+                    post.community = Community.query.get(post.community_id)
+            
+            results['posts'] = posts_query
+        
+        # Поиск друзей (подписок текущего пользователя)
+        if tab in ['all', 'friends']:
+            if 'user_id' in session:
+                # Получаем ID пользователей, на которых подписан текущий пользователь
+                followed_ids = [f.following_id for f in Follow.query.filter_by(follower_id=session['user_id']).all()]
+                
+                if followed_ids:
+                    friends_query = User.query.filter(
+                        User.id.in_(followed_ids)
+                    ).filter(
+                        db.or_(
+                            User.username.ilike(f'%{query}%'),
+                            User.first_name.ilike(f'%{query}%'),
+                            User.last_name.ilike(f'%{query}%'),
+                            User.bio.ilike(f'%{query}%')
+                        )
+                    ).limit(20).all()
+                    results['friends'] = friends_query
+    
+    return render_template('search.html', query=query, tab=tab, results=results)
 
 # Редактирование профиля
 @app.route('/profile/<username>/edit', methods=['GET', 'POST'])
@@ -3015,7 +3326,237 @@ def change_member_role(community_id, user_id):
         'message': f'Роль участника изменена на {new_role}'
     })
 
+# Словарь для хранения соответствия sid -> user_id
+user_sessions = {}
+
+# Обработчики SocketIO для реального времени  
+@socketio.on('connect')
+def handle_connect(auth):
+    """Обработка подключения пользователя"""
+    from flask import request
+    user_id = None
+    
+    # Flask-SocketIO может передавать session через request.environ
+    # Пытаемся получить user_id несколькими способами
+    try:
+        # Способ 1: через request.environ (Flask-SocketIO использует это)
+        if hasattr(request, 'environ') and 'flask.session' in request.environ:
+            flask_session = request.environ['flask.session']
+            if 'user_id' in flask_session:
+                user_id = flask_session['user_id']
+        # Способ 2: через session напрямую (если доступно)
+        elif hasattr(request, 'session') and 'user_id' in request.session:
+            user_id = request.session['user_id']
+        # Способ 3: через auth параметр
+        elif auth and isinstance(auth, dict) and 'user_id' in auth:
+            user_id = auth['user_id']
+    except Exception as e:
+        print(f"Ошибка при получении user_id: {e}")
+    
+    if not user_id:
+        # Разрешаем подключение, но user_id будет получен позже при join_chat
+        print(f"Подключение без user_id, sid: {request.sid}, разрешаем подключение")
+        emit('connected', {'status': 'connected', 'user_id': None})
+        return True
+    
+    # Сохраняем соответствие sid -> user_id
+    user_sessions[request.sid] = user_id
+    room = f"user_{user_id}"
+    join_room(room)
+    print(f"Пользователь {user_id} подключился к комнате {room}, sid: {request.sid}")
+    emit('connected', {'status': 'connected', 'user_id': user_id})
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    """Обработка отключения пользователя"""
+    from flask import request
+    user_id = user_sessions.get(request.sid)
+    if user_id:
+        room = f"user_{user_id}"
+        leave_room(room)
+        # Удаляем из словаря
+        if request.sid in user_sessions:
+            del user_sessions[request.sid]
+        print(f"Пользователь {user_id} отключился от комнаты {room}")
+
+@socketio.on('join_chat')
+def handle_join_chat(data):
+    """Подключение к чату с конкретным пользователем"""
+    from flask import request
+    
+    # Пытаемся получить user_id из кеша
+    user_id = user_sessions.get(request.sid)
+    
+    # Если user_id нет в кеше, пытаемся получить из cookies/сессии
+    if not user_id:
+        try:
+            # Используем session interface для декодирования cookie
+            from flask.sessions import SecureCookieSessionInterface
+            session_interface = SecureCookieSessionInterface()
+            
+            # Декодируем сессию из cookie напрямую
+            cookie_name = app.config['SESSION_COOKIE_NAME']
+            cookie_value = request.cookies.get(cookie_name) if hasattr(request, 'cookies') else None
+            
+            if cookie_value:
+                # Создаем минимальный request для декодирования
+                class MockRequest:
+                    def __init__(self, cookie_val):
+                        self.cookies = {cookie_name: cookie_val}
+                        self.method = 'GET'
+                        self.path = '/'
+                
+                mock_req = MockRequest(cookie_value)
+                session_data = session_interface.open_session(app, mock_req)
+                if session_data and 'user_id' in session_data:
+                    user_id = session_data['user_id']
+                    user_sessions[request.sid] = user_id
+                    print(f"Получен user_id {user_id} из cookie для sid {request.sid}")
+        except Exception as e:
+            print(f"Ошибка при получении user_id в join_chat: {e}")
+    
+    if not user_id:
+        emit('error', {'message': 'Не авторизован. Пожалуйста, обновите страницу.'})
+        print(f"Не удалось получить user_id для sid: {request.sid}")
+        return False
+    
+    other_username = data.get('username')
+    if not other_username:
+        return False
+    
+    other_user = User.query.filter_by(username=other_username).first()
+    if not other_user:
+        return False
+    
+    # Проверяем, подписан ли текущий пользователь на этого пользователя
+    is_following = Follow.query.filter_by(
+        follower_id=user_id,
+        following_id=other_user.id
+    ).first() is not None
+    
+    if not is_following:
+        emit('error', {'message': 'Вы не подписаны на этого пользователя'})
+        return False
+    
+    # Подключаемся к комнате чата
+    current_user_id = user_id
+    chat_room = f"chat_{min(current_user_id, other_user.id)}_{max(current_user_id, other_user.id)}"
+    join_room(chat_room)
+    
+    emit('joined_chat', {'room': chat_room, 'username': other_username})
+
+@socketio.on('leave_chat')
+def handle_leave_chat(data):
+    """Отключение от чата"""
+    from flask import request
+    user_id = user_sessions.get(request.sid)
+    
+    if not user_id:
+        return False
+    
+    other_username = data.get('username')
+    if not other_username:
+        return False
+    
+    other_user = User.query.filter_by(username=other_username).first()
+    if not other_user:
+        return False
+    
+    current_user_id = user_id
+    chat_room = f"chat_{min(current_user_id, other_user.id)}_{max(current_user_id, other_user.id)}"
+    leave_room(chat_room)
+
+@socketio.on('mark_read')
+def handle_mark_read(data):
+    """Отметка сообщения как прочитанного"""
+    from flask import request
+    user_id = user_sessions.get(request.sid)
+    
+    if not user_id:
+        return False
+    
+    message_id = data.get('message_id')
+    if not message_id:
+        return False
+    
+    # Помечаем сообщение как прочитанное
+    message = Message.query.get(message_id)
+    if message and message.recipient_id == user_id:
+        message.is_read = True
+        db.session.commit()
+
+@socketio.on('send_message')
+def handle_send_message(data):
+    """Обработка отправки сообщения через WebSocket"""
+    from flask import request
+    user_id = user_sessions.get(request.sid)
+    
+    if not user_id:
+        emit('error', {'message': 'Не авторизован'})
+        return False
+    
+    recipient_username = data.get('username')
+    content = data.get('content', '').strip()
+    
+    if not content:
+        emit('error', {'message': 'Сообщение не может быть пустым'})
+        return False
+    
+    recipient = User.query.filter_by(username=recipient_username).first()
+    if not recipient:
+        emit('error', {'message': 'Пользователь не найден'})
+        return False
+    
+    # Проверяем, подписан ли текущий пользователь на получателя
+    is_following = Follow.query.filter_by(
+        follower_id=user_id,
+        following_id=recipient.id
+    ).first() is not None
+    
+    if not is_following:
+        emit('error', {'message': 'Вы можете отправлять сообщения только пользователям, на которых подписаны'})
+        return False
+    
+    # Создаем сообщение
+    sender = User.query.get(user_id)
+    message = Message(
+        sender_id=user_id,
+        recipient_id=recipient.id,
+        content=content
+    )
+    
+    db.session.add(message)
+    db.session.commit()
+    
+    # Отправляем сообщение всем в комнате чата
+    current_user_id = user_id
+    chat_room = f"chat_{min(current_user_id, recipient.id)}_{max(current_user_id, recipient.id)}"
+    
+    message_data = {
+        'message_id': message.id,
+        'sender_id': user_id,
+        'sender_username': sender.username,
+        'sender_name': f"{sender.first_name} {sender.last_name}",
+        'sender_avatar': sender.avatar if sender.avatar else None,
+        'content': content,
+        'created_at': message.created_at.strftime('%H:%M'),
+        'created_at_full': message.created_at.strftime('%d.%m.%Y %H:%M'),
+        'is_own': False  # Для получателя это чужое сообщение
+    }
+    
+    # Отправляем получателю
+    socketio.emit('new_message', message_data, room=chat_room)
+    
+    # Отправляем отправителю подтверждение с пометкой, что это его сообщение
+    emit('message_sent', {
+        'message_id': message.id,
+        'content': content,
+        'created_at': message.created_at.strftime('%H:%M'),
+        'created_at_full': message.created_at.strftime('%d.%m.%Y %H:%M'),
+        'is_own': True
+    })
+
 if __name__ == '__main__':
     init_db()
     migrate_db()  # Запускаем миграцию для добавления новых полей
-    app.run(debug=True)
+    socketio.run(app, debug=True)

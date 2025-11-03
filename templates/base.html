@@ -50,8 +50,50 @@
 
         .navbar-nav {
             display: flex;
-            gap: 2rem;
+            gap: 1.5rem;
             align-items: center;
+            margin-left: auto; /* Прижимаем к правому краю */
+        }
+
+        .navbar-search-form {
+            max-width: 300px;
+            min-width: 200px;
+        }
+
+        .navbar-search-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-search-wrapper:focus-within {
+            background: #ffffff;
+            border-color: #007AFF;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+
+        .navbar-search-wrapper i {
+            color: rgba(26, 26, 26, 0.5);
+            font-size: 0.9rem;
+        }
+
+        .navbar-search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-size: 0.95rem;
+            color: #1A1A1A;
+            width: 100%;
+        }
+
+        .navbar-search-input::placeholder {
+            color: rgba(26, 26, 26, 0.5);
         }
         
         .nav-link {
@@ -978,7 +1020,11 @@
                 padding: 1rem;
                 padding-bottom: 84px; /* место под мобильное меню */
             }
-            .mobile-nav{ display: grid; }
+            .mobile-nav{ display: grid; grid-template-columns: repeat(5, 1fr); }
+            
+            .navbar-search-form {
+                display: none; /* Скрываем поиск в навбаре на мобильных */
+            }
         }
 
                 /* Убираем подчеркивания у всех ссылок */
@@ -998,7 +1044,7 @@
             box-shadow: 0 -4px 12px rgba(0,0,0,0.06);
             z-index: 1000;
             padding: 6px max(8px, env(safe-area-inset-left)) calc(6px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-right));
-            grid-template-columns: repeat(4, 1fr); gap: 4px;
+            grid-template-columns: repeat(5, 1fr); gap: 4px;
         }
         .mobile-nav a, .mobile-nav .nav-item-disabled {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -1261,15 +1307,21 @@
         </div>
         
         <div class="navbar-nav">
-            <button class="sidebar-toggle" onclick="toggleSidebar()">
-                <i class="fas fa-bars"></i>
-            </button>
+            {% if session.user_id %}
+            <form method="GET" action="{{ url_for('search') }}" class="navbar-search-form">
+                <div class="navbar-search-wrapper">
+                    <i class="fas fa-search"></i>
+                    <input type="text" name="q" placeholder="Поиск..." class="navbar-search-input" value="{{ request.args.get('q', '') }}">
+                </div>
+            </form>
+            {% endif %}
             
-                    {% if session.user_id %}
+            {% if session.user_id %}
             <div class="user-info">
                 <div class="user-avatar">
                     {% if session.get('avatar') %}
-                        <img src="{{ url_for('static', filename=session.get('avatar')) }}" alt="Аватар" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                        {% set avatar_filename = session.get('avatar').split('/')[-1] if '/' in session.get('avatar') else session.get('avatar') %}
+                        <img src="{{ url_for('uploaded_file', filename=avatar_filename) }}" alt="Аватар" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
                     {% else %}
                         {{ session.username[0].upper() }}
                     {% endif %}
@@ -1298,6 +1350,12 @@
                 </a>
             </div>
             <div class="sidebar-item">
+                <a href="{{ url_for('search') }}" class="sidebar-link">
+                    <i class="fas fa-search"></i>
+                    <span>Поиск</span>
+                </a>
+            </div>
+            <div class="sidebar-item">
                 <a href="{{ url_for('profile', username=session.username) }}" class="sidebar-link">
                     <i class="fas fa-user"></i>
                     <span>Профиль</span>
@@ -1314,7 +1372,13 @@
                     <i class="fas fa-user-friends"></i>
                     <span>Друзья</span>
                 </a>
-        </div>
+            </div>
+            <div class="sidebar-item">
+                <a href="{{ url_for('messages') }}" class="sidebar-link">
+                    <i class="fas fa-comments"></i>
+                    <span>Сообщения</span>
+                </a>
+            </div>
     </nav>
     </div>
     {% endif %}
@@ -1331,6 +1395,10 @@
             <i class="fas fa-home"></i>
             <span>Главная</span>
         </a>
+        <a href="{{ url_for('search') }}" class="mobile-link" aria-label="Поиск">
+            <i class="fas fa-search"></i>
+            <span>Поиск</span>
+        </a>
         <a href="{{ url_for('profile', username=session.username) }}" class="mobile-link" aria-label="Профиль">
             <i class="fas fa-user"></i>
             <span>Профиль</span>
@@ -1339,10 +1407,10 @@
             <i class="fas fa-users"></i>
             <span>Сообщества</span>
         </a>
-        <div class="nav-item-disabled" aria-disabled="true" title="Временно не работает">
-            <i class="fas fa-ellipsis-h"></i>
-            <span>Другое</span>
-        </div>
+        <a href="{{ url_for('messages') }}" class="mobile-link" aria-label="Сообщения">
+            <i class="fas fa-comments"></i>
+            <span>Сообщения</span>
+        </a>
     </nav>
     {% endif %}
 
@@ -1362,6 +1430,9 @@
     <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1842490779540555"
          crossorigin="anonymous"></script>
+    
+    <!-- Socket.IO для реального времени -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     
     <!-- Font Awesome -->
     <script>

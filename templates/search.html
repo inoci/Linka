@@ -1,0 +1,844 @@
+{% extends "base.html" %}
+
+{% block title %}Поиск - Линка{% endblock %}
+
+{% block content %}
+<div class="search-layout">
+    <!-- Поисковая строка -->
+    <div class="search-header">
+        <form method="GET" action="{{ url_for('search') }}" class="search-form">
+            <div class="search-input-wrapper">
+                <i class="fas fa-search"></i>
+                <input type="text" name="q" value="{{ query }}" placeholder="Поиск пользователей, сообществ, постов..." class="search-input" autofocus>
+                <button type="submit" class="search-btn">Найти</button>
+            </div>
+        </form>
+    </div>
+
+    {% if query %}
+    <!-- Табы -->
+    <div class="search-tabs">
+        <a href="{{ url_for('search', q=query, tab='all') }}" class="tab-link {% if tab == 'all' %}active{% endif %}">
+            <i class="fas fa-th"></i> Все
+        </a>
+        <a href="{{ url_for('search', q=query, tab='users') }}" class="tab-link {% if tab == 'users' %}active{% endif %}">
+            <i class="fas fa-user"></i> Пользователи ({{ results.users|length }})
+        </a>
+        <a href="{{ url_for('search', q=query, tab='communities') }}" class="tab-link {% if tab == 'communities' %}active{% endif %}">
+            <i class="fas fa-users"></i> Сообщества ({{ results.communities|length }})
+        </a>
+        <a href="{{ url_for('search', q=query, tab='posts') }}" class="tab-link {% if tab == 'posts' %}active{% endif %}">
+            <i class="fas fa-newspaper"></i> Посты ({{ results.posts|length }})
+        </a>
+        <a href="{{ url_for('search', q=query, tab='friends') }}" class="tab-link {% if tab == 'friends' %}active{% endif %}">
+            <i class="fas fa-user-friends"></i> Друзья ({{ results.friends|length }})
+        </a>
+    </div>
+
+    <!-- Результаты -->
+    <div class="search-results">
+        <!-- Пользователи -->
+        {% if tab in ['all', 'users'] %}
+        <div class="results-section" id="users-section">
+            <h3><i class="fas fa-user"></i> Пользователи</h3>
+            {% if results.users %}
+            <div class="users-grid">
+                {% for user in results.users %}
+                <div class="user-card">
+                    <a href="{{ url_for('profile', username=user.username) }}" class="user-card-link">
+                        <div class="user-card-avatar">
+                            {% if user.avatar %}
+                                {% set avatar_filename = user.avatar.split('/')[-1] if '/' in user.avatar else user.avatar %}
+                                <img src="{{ url_for('uploaded_file', filename=avatar_filename) }}" alt="{{ user.username }}">
+                            {% else %}
+                                {{ user.username[0].upper() }}
+                            {% endif %}
+                        </div>
+                        <div class="user-card-info">
+                            <div class="user-card-name">{{ user.first_name }} {{ user.last_name }}</div>
+                            <div class="user-card-username">@{{ user.username }}</div>
+                            {% if user.bio %}
+                            <div class="user-card-bio">{{ user.bio[:100] }}{% if user.bio|length > 100 %}...{% endif %}</div>
+                            {% endif %}
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="no-results">Пользователи не найдены</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Сообщества -->
+        {% if tab in ['all', 'communities'] %}
+        <div class="results-section" id="communities-section">
+            <h3><i class="fas fa-users"></i> Сообщества</h3>
+            {% if results.communities %}
+            <div class="communities-grid">
+                {% for community in results.communities %}
+                <div class="community-card-search">
+                    <a href="{{ url_for('community', community_id=community.id) }}" class="community-card-link">
+                        <div class="community-card-cover">
+                            {% if community.cover_image %}
+                                {% set cover_filename = community.cover_image.split('/')[-1] if '/' in community.cover_image else community.cover_image %}
+                                <img src="{{ url_for('uploaded_file', filename=cover_filename) }}" alt="Обложка {{ community.name }}">
+                            {% else %}
+                                <div class="default-cover-search">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="community-card-content">
+                            <div class="community-card-avatar">
+                                {% if community.avatar %}
+                                    {% set avatar_filename = community.avatar.split('/')[-1] if '/' in community.avatar else community.avatar %}
+                                    <img src="{{ url_for('uploaded_file', filename=avatar_filename) }}" alt="Аватар {{ community.name }}">
+                                {% else %}
+                                    {{ community.name[0].upper() }}
+                                {% endif %}
+                            </div>
+                            <div class="community-card-info">
+                                <h4>{{ community.name }}</h4>
+                                {% if community.description %}
+                                <p>{{ community.description[:150] }}{% if community.description|length > 150 %}...{% endif %}</p>
+                                {% endif %}
+                                {% if community.category %}
+                                <span class="community-category-search">{{ community.category }}</span>
+                                {% endif %}
+                                <div class="community-stats-search">
+                                    <span><i class="fas fa-users"></i> {{ community.member_count() }} участников</span>
+                                    <span><i class="fas fa-newspaper"></i> {{ community.post_count() }} постов</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="no-results">Сообщества не найдены</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Посты -->
+        {% if tab in ['all', 'posts'] %}
+        <div class="results-section" id="posts-section">
+            <h3><i class="fas fa-newspaper"></i> Посты</h3>
+            {% if results.posts %}
+            <div class="posts-container">
+                {% for post in results.posts %}
+                <article class="post-card">
+                    <div class="post-header">
+                        <div class="post-user-info">
+                            <div class="post-avatar">
+                                {% if post.user and post.user.avatar %}
+                                    {% set avatar_filename = post.user.avatar.split('/')[-1] if '/' in post.user.avatar else post.user.avatar %}
+                                    <img src="{{ url_for('uploaded_file', filename=avatar_filename) }}" alt="Аватар {{ post.user.username }}">
+                                {% elif post.user and post.user.username %}
+                                    {{ post.user.username[0].upper() }}
+                                {% else %}
+                                    ?
+                                {% endif %}
+                            </div>
+                            <div class="user-details">
+                                <h4 class="user-name">
+                                    {% if post.user and post.user.username %}
+                                        <a href="{{ url_for('profile', username=post.user.username) }}">
+                                            {{ post.user.first_name }} {{ post.user.last_name }}
+                                        </a>
+                                    {% else %}
+                                        <span>Пользователь удален</span>
+                                    {% endif %}
+                                </h4>
+                                <div class="post-meta">
+                                    {% if post.user and post.user.username %}
+                                        <span class="username">@{{ post.user.username }}</span>
+                                    {% endif %}
+                                    <span class="post-time">
+                                        <i class="fas fa-clock"></i>
+                                        {{ post.created_at.strftime('%d.%m.%Y в %H:%M') }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="post-content">
+                        <p>{{ post.content }}</p>
+                        
+                        {% if post.image %}
+                        <div class="post-image">
+                            {% set filename = post.image.split('/')[-1] if '/' in post.image else post.image %}
+                            {% set image_url = url_for('uploaded_file', filename=filename) %}
+                            <img src="{{ image_url }}" alt="Изображение в посте" class="post-image-content">
+                        </div>
+                        {% endif %}
+                        
+                        {% if post.tags %}
+                        <div class="post-tags">
+                            {% for tag in post.get_tags_list() %}
+                            <span class="tag">#{{ tag }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="no-results">Посты не найдены</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Друзья -->
+        {% if tab in ['all', 'friends'] %}
+        <div class="results-section" id="friends-section">
+            <h3><i class="fas fa-user-friends"></i> Друзья (подписки)</h3>
+            {% if results.friends %}
+            <div class="friends-grid-search">
+                {% for friend in results.friends %}
+                <div class="friend-card-search">
+                    <a href="{{ url_for('profile', username=friend.username) }}" class="friend-card-link">
+                        <div class="friend-avatar-search">
+                            {% if friend.avatar %}
+                                {% set avatar_filename = friend.avatar.split('/')[-1] if '/' in friend.avatar else friend.avatar %}
+                                <img src="{{ url_for('uploaded_file', filename=avatar_filename) }}" alt="{{ friend.username }}">
+                            {% else %}
+                                {{ friend.username[0].upper() }}
+                            {% endif %}
+                        </div>
+                        <div class="friend-info-search">
+                            <div class="friend-name-search">{{ friend.first_name }} {{ friend.last_name }}</div>
+                            <div class="friend-username-search">@{{ friend.username }}</div>
+                            {% if friend.bio %}
+                            <div class="friend-bio-search">{{ friend.bio[:80] }}{% if friend.bio|length > 80 %}...{% endif %}</div>
+                            {% endif %}
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="no-results">Друзья не найдены</p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="search-empty">
+        <div class="search-empty-icon">
+            <i class="fas fa-search"></i>
+        </div>
+        <h3>Начните поиск</h3>
+        <p>Введите запрос в поисковую строку, чтобы найти пользователей, сообщества и посты</p>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .search-layout {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    .search-header {
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .search-form {
+        width: 100%;
+    }
+
+    .search-input-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: #ffffff;
+        border: 2px solid rgba(0, 0, 0, 0.12);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .search-input-wrapper:focus-within {
+        border-color: #007AFF;
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+    }
+
+    .search-input-wrapper i {
+        color: rgba(26, 26, 26, 0.5);
+        font-size: 1.2rem;
+    }
+
+    .search-input {
+        flex: 1;
+        border: none;
+        outline: none;
+        font-size: 1.1rem;
+        color: #1A1A1A;
+        background: transparent;
+    }
+
+    .search-input::placeholder {
+        color: rgba(26, 26, 26, 0.5);
+    }
+
+    .search-btn {
+        background: #007AFF;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .search-btn:hover {
+        background: #005FCC;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+
+    .search-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
+        padding: 0.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .tab-link {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        border-radius: 8px;
+        text-decoration: none;
+        color: rgba(26, 26, 26, 0.7);
+        font-weight: 500;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+    }
+
+    .tab-link:hover {
+        background: rgba(0, 122, 255, 0.06);
+        color: #1A1A1A;
+    }
+
+    .tab-link.active {
+        background: rgba(0, 122, 255, 0.1);
+        color: #007AFF;
+        border-color: rgba(0, 122, 255, 0.2);
+    }
+
+    .tab-link i {
+        font-size: 0.9rem;
+    }
+
+    .search-results {
+        display: flex;
+        flex-direction: column;
+        gap: 3rem;
+    }
+
+    .results-section h3 {
+        color: #1A1A1A;
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .results-section h3 i {
+        color: #007AFF;
+    }
+
+    .no-results {
+        text-align: center;
+        padding: 3rem;
+        color: rgba(26, 26, 26, 0.6);
+        font-size: 1.1rem;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
+    }
+
+    /* Пользователи */
+    .users-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .user-card {
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+    }
+
+    .user-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .user-card-link {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        text-decoration: none;
+        color: #1A1A1A;
+    }
+
+    .user-card-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #007AFF, #66A3FF);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+
+    .user-card-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    .user-card-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .user-card-name {
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .user-card-username {
+        color: rgba(26, 26, 26, 0.6);
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .user-card-bio {
+        color: rgba(26, 26, 26, 0.7);
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    /* Сообщества */
+    .communities-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .community-card-search {
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+    }
+
+    .community-card-search:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .community-card-link {
+        text-decoration: none;
+        color: #1A1A1A;
+    }
+
+    .community-card-cover {
+        height: 120px;
+        overflow: hidden;
+        background: linear-gradient(135deg, #007AFF, #66A3FF);
+    }
+
+    .community-card-cover img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .default-cover-search {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 3rem;
+    }
+
+    .community-card-content {
+        padding: 1.5rem;
+        display: flex;
+        gap: 1rem;
+    }
+
+    .community-card-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #007AFF, #66A3FF);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+        overflow: hidden;
+        border: 3px solid #ffffff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .community-card-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    .community-card-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .community-card-info h4 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.2rem;
+        color: #1A1A1A;
+    }
+
+    .community-card-info p {
+        color: rgba(26, 26, 26, 0.7);
+        font-size: 0.9rem;
+        margin: 0 0 0.75rem 0;
+        line-height: 1.4;
+    }
+
+    .community-category-search {
+        display: inline-block;
+        background: rgba(0, 122, 255, 0.1);
+        color: #007AFF;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-bottom: 0.75rem;
+    }
+
+    .community-stats-search {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.85rem;
+        color: rgba(26, 26, 26, 0.6);
+    }
+
+    .community-stats-search i {
+        color: #007AFF;
+        margin-right: 0.25rem;
+    }
+
+    /* Друзья */
+    .friends-grid-search {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .friend-card-search {
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+    }
+
+    .friend-card-search:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .friend-card-link {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        text-decoration: none;
+        color: #1A1A1A;
+    }
+
+    .friend-avatar-search {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #007AFF, #66A3FF);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+
+    .friend-avatar-search img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    .friend-info-search {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .friend-name-search {
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .friend-username-search {
+        color: rgba(26, 26, 26, 0.6);
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .friend-bio-search {
+        color: rgba(26, 26, 26, 0.7);
+        font-size: 0.85rem;
+        line-height: 1.4;
+    }
+
+    /* Пустое состояние */
+    .search-empty {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .search-empty-icon {
+        font-size: 4rem;
+        color: rgba(26, 26, 26, 0.25);
+        margin-bottom: 1.5rem;
+    }
+
+    .search-empty h3 {
+        color: #1A1A1A;
+        margin-bottom: 1rem;
+        font-size: 1.8rem;
+    }
+
+    .search-empty p {
+        color: rgba(26, 26, 26, 0.6);
+        font-size: 1.1rem;
+    }
+
+    /* Стили для постов в результатах поиска */
+    .posts-container .post-card {
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+    }
+
+    .posts-container .post-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .posts-container .post-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+    }
+
+    .posts-container .post-user-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .posts-container .post-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #007AFF, #66A3FF);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+
+    .posts-container .post-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    .posts-container .user-details h4 {
+        margin: 0 0 0.25rem 0;
+        color: #1A1A1A;
+        font-size: 1.1rem;
+    }
+
+    .posts-container .user-details a {
+        color: #1A1A1A;
+        text-decoration: none;
+    }
+
+    .posts-container .post-meta {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        font-size: 0.9rem;
+        color: rgba(26, 26, 26, 0.6);
+    }
+
+    .posts-container .post-content {
+        margin-bottom: 1rem;
+    }
+
+    .posts-container .post-content p {
+        color: #1A1A1A;
+        line-height: 1.6;
+        margin: 0 0 1rem 0;
+    }
+
+    .posts-container .post-image {
+        margin: 1rem 0;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        background: #ffffff;
+    }
+
+    .posts-container .post-image-content {
+        width: 100%;
+        max-height: 600px;
+        object-fit: contain;
+        display: block;
+    }
+
+    .posts-container .post-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    .posts-container .tag {
+        display: inline-block;
+        background: rgba(0, 122, 255, 0.1);
+        color: #007AFF;
+        padding: 0.3rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-decoration: none;
+    }
+
+    /* Адаптивность */
+    @media (max-width: 768px) {
+        .search-layout {
+            padding: 1rem 0.5rem;
+        }
+
+        .search-tabs {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tab-link {
+            white-space: nowrap;
+            font-size: 0.9rem;
+            padding: 0.6rem 1rem;
+        }
+
+        .users-grid,
+        .communities-grid,
+        .friends-grid-search {
+            grid-template-columns: 1fr;
+        }
+
+        .posts-container .post-card {
+            padding: 1.5rem;
+        }
+    }
+</style>
+
+<script>
+    // Автоматическая отправка формы при нажатии Enter
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.querySelector('.search-input');
+        const navbarSearchInput = document.querySelector('.navbar-search-input');
+        
+        if (searchInput) {
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.target.closest('form').submit();
+                }
+            });
+        }
+        
+        if (navbarSearchInput) {
+            navbarSearchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.target.closest('form').submit();
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
+

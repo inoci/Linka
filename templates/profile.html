@@ -12,7 +12,8 @@
                 <div class="profile-info">
                     <div class="profile-avatar-large">
                         {% if user.avatar %}
-                            <img src="{{ url_for('static', filename=user.avatar) }}" alt="Аватар {{ user.username }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                            {% set avatar_filename = user.avatar.split('/')[-1] if '/' in user.avatar else user.avatar %}
+                            <img src="{{ url_for('uploaded_file', filename=avatar_filename) }}" alt="Аватар {{ user.username }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
                         {% else %}
                             {{ user.username[0].upper() }}
                         {% endif %}
@@ -79,7 +80,8 @@
                             <div class="post-user-info">
                                 <div class="post-avatar">
                                     {% if post.user and post.user.avatar %}
-                                        <img src="{{ url_for('static', filename=post.user.avatar) }}" alt="Аватар {{ post.user.username }}">
+                                        {% set avatar_filename = post.user.avatar.split('/')[-1] if '/' in post.user.avatar else post.user.avatar %}
+                                        <img src="{{ url_for('uploaded_file', filename=avatar_filename) }}" alt="Аватар {{ post.user.username }}">
                                     {% elif post.user and post.user.username %}
                                         {{ post.user.username[0].upper() }}
                                     {% else %}
@@ -122,13 +124,14 @@
                             <!-- Отображение изображения -->
                             {% if post.image %}
                             <div class="post-image">
-                                {% set image_url = url_for('static', filename=post.image) %}
+                                {% set filename = post.image.split('/')[-1] if '/' in post.image else post.image %}
+                                {% set image_url = url_for('uploaded_file', filename=filename) %}
                                 <img src="{{ image_url }}" alt="Изображение в посте" class="post-image-content" 
                                      onerror="console.error('Ошибка загрузки изображения:', '{{ image_url }}'); this.style.display='none'; this.nextElementSibling.style.display='block';">
                                 <div style="display:none; padding:2rem; text-align:center; color:#999; background:#f5f5f5; border-radius:8px;">
                                     <i class="fas fa-exclamation-triangle" style="font-size:2rem; margin-bottom:1rem; opacity:0.5;"></i>
                                     <p style="margin:0;">Изображение не загружено</p>
-                                    <p style="font-size:0.75rem; margin-top:0.5rem; opacity:0.7;">Путь: {{ post.image }}</p>
+                                    <p style="font-size:0.75rem; margin-top:0.5rem; opacity:0.7;">Файл: {{ filename }}</p>
                                 </div>
                             </div>
                             {% endif %}
@@ -243,7 +246,8 @@
                                 <a href="{{ url_for('profile', username=u.username) }}" class="suggest-user">
                                     <div class="suggest-avatar">
                                         {% if u.avatar %}
-                                            <img src="{{ url_for('static', filename=u.avatar) }}" alt="{{ u.username }}">
+                                            {% set avatar_filename = u.avatar.split('/')[-1] if '/' in u.avatar else u.avatar %}
+                                            <img src="{{ url_for('uploaded_file', filename=avatar_filename) }}" alt="{{ u.username }}">
                                         {% else %}
                                             {{ u.username[0].upper() }}
                                         {% endif %}
