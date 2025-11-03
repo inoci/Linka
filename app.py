@@ -758,7 +758,22 @@ def create_post():
                         flash('Ошибка при сохранении изображения', 'error')
                         return redirect(url_for('feed'))
                     
+                    # Проверяем, что файл действительно существует и имеет размер
+                    file_size = os.path.getsize(filepath)
+                    if file_size == 0:
+                        flash('Ошибка: файл изображения пустой', 'error')
+                        return redirect(url_for('feed'))
+                    
+                    # Логируем для отладки
+                    print(f"DEBUG: Изображение сохранено: {filepath}")
+                    print(f"DEBUG: Размер файла: {file_size} байт")
+                    
                     image_path = f"uploads/{filename}"  # Относительный путь для HTML
+                    print(f"DEBUG: Путь в БД: {image_path}")
+                    
+                    # Проверяем, что путь правильный
+                    expected_url = url_for('static', filename=image_path)
+                    print(f"DEBUG: URL будет: {expected_url}")
                 except Exception as e:
                     print(f"Ошибка при сохранении изображения: {str(e)}")
                     flash('Ошибка при загрузке изображения. Попробуйте еще раз.', 'error')
@@ -2506,8 +2521,20 @@ def create_community_post(community_id):
             if image_file and image_file.filename:
                 if allowed_file(image_file.filename):
                     filename = f"community_post_{session['user_id']}_{int(time.time())}_{secure_filename(image_file.filename)}"
-                    image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                    image_file.save(image_path)
+                    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    image_file.save(filepath)
+                    
+                    # Проверяем, что файл действительно сохранился
+                    if not os.path.exists(filepath):
+                        flash('Ошибка при сохранении изображения', 'error')
+                        return redirect(url_for('community', community_id=community_id))
+                    
+                    # Проверяем размер файла
+                    file_size = os.path.getsize(filepath)
+                    if file_size == 0:
+                        flash('Ошибка: файл изображения пустой', 'error')
+                        return redirect(url_for('community', community_id=community_id))
+                    
                     image_path = f"uploads/{filename}"
         
         # Обработка видео

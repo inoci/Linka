@@ -304,7 +304,14 @@
                             <!-- Отображение изображения -->
                             {% if post.image %}
                             <div class="post-image">
-                                <img src="{{ url_for('static', filename=post.image) }}" alt="Изображение в посте" class="post-image-content">
+                                {% set image_url = url_for('static', filename=post.image) %}
+                                <img src="{{ image_url }}" alt="Изображение в посте" class="post-image-content" 
+                                     onerror="console.error('Ошибка загрузки изображения:', '{{ image_url }}'); this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <div style="display:none; padding:2rem; text-align:center; color:#999; background:#f5f5f5; border-radius:8px;">
+                                    <i class="fas fa-exclamation-triangle" style="font-size:2rem; margin-bottom:1rem; opacity:0.5;"></i>
+                                    <p style="margin:0;">Изображение не загружено</p>
+                                    <p style="font-size:0.75rem; margin-top:0.5rem; opacity:0.7;">Путь: {{ post.image }}</p>
+                                </div>
                             </div>
                             {% endif %}
                             
